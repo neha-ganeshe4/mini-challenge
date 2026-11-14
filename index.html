@@ -1,0 +1,829 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cancel Quest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#070b1f; --panel:#0c1433; --line:rgba(62,224,255,.25);
+  --cyan:#3ee0ff; --pink:#ff3ea5; --yellow:#ffd23e; --text:#e8ecff; --muted:#8a93b8;
+  --cs-bg:#f3f4f6; --cs-card:#ffffff; --cs-text:#1f2430; --cs-muted:#6b7280;
+  --cs-green:#16a34a; --cs-blue:#2563eb; --cs-red:#dc2626; --cs-grey:#d6d9df;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--bg); color:var(--text); min-height:100vh;
+  font-family:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  background-image:linear-gradient(rgba(62,224,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(62,224,255,.05) 1px,transparent 1px);
+  background-size:40px 40px;
+}
+button{font:inherit;cursor:pointer}
+
+/* ---------- HUD ---------- */
+.hud{max-width:1200px;margin:0 auto;padding:14px 16px;display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+.title{font-weight:800;letter-spacing:.12em;color:#fff;font-size:22px;text-shadow:0 0 8px var(--pink),0 0 20px var(--pink)}
+.title small{display:block;color:var(--cyan);text-shadow:none;font-size:11px;letter-spacing:.22em;font-weight:600}
+.stats{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;font-size:12px;color:var(--muted)}
+.stats b{color:var(--text)}
+.hp{display:flex;gap:3px;align-items:center}
+.hp i{width:14px;height:11px;background:var(--yellow);display:block}
+.hp i.off{background:#262c4a}
+.hp.low i:not(.off){background:var(--pink);animation:blink .6s infinite}
+.hud-btn{background:transparent;color:var(--cyan);border:1px solid var(--cyan);padding:6px 10px;font-size:12px;letter-spacing:.08em}
+.hud-btn:hover{background:rgba(62,224,255,.12)}
+.hud-btn.pink{color:var(--pink);border-color:var(--pink)}
+.mission{max-width:1200px;margin:14px auto 0;padding:0 16px;color:var(--cyan);font-size:13px;letter-spacing:.06em}
+.mission span{color:var(--muted)}
+
+main{max-width:1200px;margin:12px auto 40px;padding:0 16px;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;align-items:start}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+
+.boss-tag{display:inline-block;border:2px solid var(--cyan);color:var(--cyan);padding:5px 14px;font-size:12px;letter-spacing:.25em;margin-bottom:-2px;background:var(--bg)}
+
+/* ---------- Fake browser ---------- */
+.browser{background:var(--cs-bg);border:2px solid var(--cyan);box-shadow:0 0 28px rgba(62,224,255,.3);color:var(--cs-text);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:600px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.browser.shake{animation:shake .3s}
+.chrome{background:#dfe3ea;padding:8px 12px;display:flex;gap:10px;align-items:center;font-size:12px;color:#555}
+.dots{display:flex;gap:6px;flex:none}
+.dots span{width:11px;height:11px;border-radius:50%}
+.url{background:#fff;border-radius:6px;padding:4px 10px;flex:1;min-width:0;font-family:ui-monospace,Consolas,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#screen{flex:1;display:flex;flex-direction:column;position:relative}
+
+.progress{padding:10px 24px 0;font-size:12px;color:var(--cs-muted)}
+.progress .bar{height:6px;background:#e3e6eb;border-radius:4px;margin-top:5px;overflow:hidden}
+.progress .bar i{display:block;height:100%;background:var(--cs-blue);transition:width .6s}
+
+.cs-nav{display:flex;gap:18px;align-items:center;padding:12px 24px;background:#fff;border-bottom:1px solid #e5e7eb;font-size:14px;color:var(--cs-muted);flex-wrap:wrap}
+.cs-logo{font-weight:800;color:#7c3aed;font-size:18px;margin-right:auto}
+.cs-avatar{background:#7c3aed;color:#fff;border-radius:50%;width:30px;height:30px;display:grid;place-items:center;font-size:12px;font-weight:700}
+.cs-body{padding:22px 24px;flex:1}
+.cs-body.center{text-align:center;display:flex;flex-direction:column;align-items:center}
+.cs-body h2{margin:6px 0 10px;font-size:24px}
+.cs-body p{line-height:1.5;max-width:560px}
+.muted{color:var(--cs-muted)} .small{font-size:13px} .red{color:var(--cs-red);font-weight:700}
+.tiny{font-size:11px;color:#9aa0aa;margin:2px 0}
+
+.plan-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:18px;display:flex;justify-content:space-between;align-items:center;gap:12px;max-width:620px}
+.plan-name{font-size:22px;font-weight:800;margin:2px 0}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}
+
+.cs-btn{border:0;border-radius:8px;padding:11px 18px;font-weight:700;font-size:14px;color:#fff;font-family:inherit}
+.cs-btn.green{background:var(--cs-green)} .cs-btn.blue{background:var(--cs-blue)} .cs-btn.red{background:var(--cs-red)}
+.cs-btn.ghost{background:#fff;color:var(--cs-text);border:1px solid #d1d5db}
+.cs-btn.grey{background:var(--cs-grey);color:#7a808c;font-weight:500}
+.cs-btn.xl{font-size:17px;padding:18px 26px;width:min(100%,460px);letter-spacing:.02em}
+.cs-btn:disabled{opacity:.45;cursor:not-allowed}
+.cs-btn:focus-visible,.offer:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}
+
+.cs-foot{border-top:1px solid #e5e7eb;padding:14px 24px;font-size:10px;color:#a3a8b1;line-height:1.9}
+.cs-foot a{color:#a3a8b1;cursor:pointer;text-decoration:none}
+.cs-foot a:hover{text-decoration:underline}
+
+.mochi{font-size:44px;line-height:1;transition:transform .3s}
+.mochi.huge{font-size:72px}
+.mochi.wobble{animation:wobble 1s infinite}
+
+.chk{display:flex;gap:8px;align-items:flex-start;font-size:13px;margin:14px 0 4px;text-align:left;max-width:460px}
+.tiny-exit{position:absolute;right:14px;bottom:10px;font-size:9px;color:#c3c7ce;cursor:pointer}
+.tiny-exit.static{position:static;margin-top:18px}
+
+/* survey */
+.q-head{font-size:12px;color:var(--cs-muted);display:flex;justify-content:space-between;max-width:560px;width:100%}
+.req{color:var(--cs-red)}
+.opt{display:block;width:100%;max-width:560px;text-align:left;background:#fff;border:1px solid #d1d5db;border-radius:8px;padding:11px 14px;margin:6px 0;font-size:14px;color:var(--cs-text)}
+.opt.sel{border-color:var(--cs-blue);box-shadow:0 0 0 2px rgba(37,99,235,.25)}
+.rebut{min-height:24px;color:#7c3aed;font-style:italic;font-size:14px;margin:8px 0;max-width:560px}
+.stars{font-size:40px;color:#d1d5db;cursor:pointer;user-select:none}
+.stars.lit{color:#f59e0b}
+input[type=range]{width:min(100%,420px)}
+
+/* maze */
+.offers{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;width:100%;margin:12px 0}
+.offer{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:14px;text-align:left;display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--cs-muted);font-family:inherit;transition:transform .15s}
+.offer:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.08)}
+.offer b{color:var(--cs-text);font-size:14px}
+.offer .oe{font-size:26px}
+
+/* runaway */
+.arena{position:relative;width:100%;height:320px;border:1px dashed #cbd0d8;border-radius:12px;margin-top:10px;overflow:hidden;background:#fafafa}
+.arena #stay{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(80%,320px)}
+.runaway{position:absolute;transition:left .14s ease-out,top .14s ease-out;z-index:2;white-space:nowrap}
+.runaway.tired{background:#9b5c5c;animation:pant 1.2s infinite}
+
+/* autocorrect */
+.phrase{font-family:ui-monospace,Consolas,monospace;font-size:20px;background:#fff;border:1px dashed #9ca3af;padding:8px 16px;border-radius:8px;margin-bottom:14px}
+.cs-input{width:min(100%,420px);font-size:18px;padding:12px 14px;border:2px solid #d1d5db;border-radius:8px;font-family:inherit}
+.cs-input:focus{outline:none;border-color:var(--cs-blue)}
+.ac-flash{font-size:13px;color:#7c3aed;margin:8px 0 14px;min-height:20px}
+.ac-flash.pop{animation:pop .35s}
+
+/* phone */
+.phone{background:#111827;border-radius:28px;padding:16px;width:min(100%,300px);margin-top:10px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.phone-screen{background:#0b1220;color:#a7f3d0;font-family:ui-monospace,Consolas,monospace;font-size:12px;text-align:left;height:170px;overflow-y:auto;border-radius:12px;padding:10px}
+.ps-line{margin:0 0 6px}
+.ps-line.dim{color:#64748b}
+.ps-line.agent{color:#fde68a}
+.phone-status{color:#94a3b8;font-size:11px;margin:8px 2px;text-align:left}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.key{background:#1f2937;color:#fff;border:0;border-radius:50%;aspect-ratio:1;font-size:20px;font-family:inherit}
+.key:active{background:#374151}
+.phone-actions{display:flex;gap:8px;margin-top:12px}
+.phone-actions .cs-btn{flex:1;padding:10px}
+
+/* confirms */
+.dialog-stage{position:relative;min-height:330px;width:100%;max-width:520px;margin:10px auto 0}
+.dialog{position:absolute;left:0;right:0;top:0;background:#fff;border:1px solid #d1d5db;border-radius:12px;padding:20px;box-shadow:0 12px 28px rgba(0,0,0,.18);text-align:center;animation:drop .25s}
+.dialog.behind{filter:blur(1px) brightness(.93);pointer-events:none}
+.dialog h3{margin:4px 0 6px;font-size:19px}
+.dialog .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+.hold-btn{position:relative;overflow:hidden;width:100%;max-width:340px;padding:18px;border:2px solid var(--cs-red);border-radius:10px;background:#fff;color:var(--cs-red);font-weight:800;font-size:16px;touch-action:none;user-select:none;-webkit-user-select:none;font-family:inherit}
+.hold-btn .fill{position:absolute;left:0;top:0;bottom:0;width:0;background:rgba(220,38,38,.18)}
+.hold-btn .lbl{position:relative}
+.hold-msg{font-size:13px;color:#7c3aed;min-height:20px}
+
+/* done */
+.stamp{border:4px solid var(--cs-green);color:var(--cs-green);font-weight:900;font-size:30px;letter-spacing:.15em;padding:6px 18px;transform:rotate(-6deg);margin:8px 0 14px;border-radius:6px}
+.score{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;width:100%;max-width:600px;margin:14px 0}
+@media (max-width:560px){.score{grid-template-columns:repeat(2,1fr)}}
+.score div{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:10px}
+.score b{display:block;font-size:22px;color:#7c3aed}
+.score span{font-size:11px;color:var(--cs-muted)}
+.survived{text-align:left;max-width:600px;width:100%;font-size:13px;columns:2;column-gap:24px;padding-left:20px}
+@media (max-width:560px){.survived{columns:1}}
+.survived li{margin-bottom:4px;break-inside:avoid}
+.confetti{position:absolute;top:-40px;font-size:22px;pointer-events:none;animation:fall linear forwards;z-index:5}
+
+/* ---------- Dex ---------- */
+.dex{background:var(--panel);border:1px solid var(--line);padding:14px}
+.dex h3{margin:0 0 4px;font-size:13px;letter-spacing:.2em;color:var(--pink)}
+.dex .sub{font-size:11px;color:var(--muted);margin-bottom:10px}
+.dex ol{list-style:none;margin:0;padding:0;font-size:12px}
+.dex li{padding:7px 0;border-top:1px solid rgba(255,255,255,.06)}
+.dex li b{color:var(--yellow);letter-spacing:.04em}
+.dex li small{display:block;color:var(--muted);margin-top:2px;line-height:1.4}
+.dex li.locked{color:#3c4468}
+.dex li.new{animation:flash 1s}
+.dex .foot{font-size:10px;color:var(--muted);margin-top:10px;line-height:1.5}
+
+/* ---------- Toasts ---------- */
+#toasts{position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:8px;z-index:50;max-width:min(340px,calc(100vw - 32px))}
+.toast{padding:10px 14px;font-size:13px;line-height:1.4;border:1px solid;background:#0c1433;animation:slidein .25s}
+.toast.good{border-color:#22c55e;color:#bbf7d0}
+.toast.evil{border-color:var(--pink);color:#ffd1e8;box-shadow:0 0 14px rgba(255,62,165,.4)}
+.toast.evil b{color:var(--pink);letter-spacing:.1em}
+.toast.hint{border-color:var(--yellow);color:#fff3c4}
+.toast.out{opacity:0;transform:translateX(20px);transition:.4s}
+
+@keyframes blink{50%{opacity:.3}}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+@keyframes wobble{50%{transform:rotate(-8deg) scale(1.05)}}
+@keyframes pant{50%{transform:scale(.94)}}
+@keyframes pop{50%{transform:scale(1.08)}}
+@keyframes drop{from{opacity:0;transform:translateY(-14px)}}
+@keyframes slidein{from{opacity:0;transform:translateX(30px)}}
+@keyframes flash{0%{background:rgba(255,62,165,.35)}}
+@keyframes fall{to{transform:translateY(720px) rotate(540deg)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="hud">
+  <div class="title">CANCEL QUEST<small>KEYTOS HACK · MINI-CHALLENGE 01</small></div>
+  <div class="stats">
+    <span>PATIENCE <span class="hp" id="hp"></span></span>
+    <span>⏱ <b id="clock">00:00</b></span>
+    <span>☠ <b id="pcount">0</b>/<span id="ptotal"></span></span>
+    <button class="hud-btn" id="hintBtn" title="Costs a little patience">HINT</button>
+    <button class="hud-btn pink" id="restartBtn">RESTART</button>
+  </div>
+</header>
+<div class="mission">&gt; MISSION: cancel your ClingStream+ subscription. <span>It is possible. Technically.</span></div>
+
+<main>
+  <section>
+    <div class="boss-tag">BOSS · THE CANCEL SCREEN</div>
+    <div class="browser" id="browser">
+      <div class="chrome">
+        <div class="dots"><span style="background:#ff5f57"></span><span style="background:#febc2e"></span><span style="background:#28c840"></span></div>
+        <div class="url" id="url">account.clingstream.example/home</div>
+      </div>
+      <div id="screen"></div>
+    </div>
+  </section>
+  <aside class="dex">
+    <h3>DARK PATTERN DEX</h3>
+    <div class="sub">Every trick you survive gets logged here.</div>
+    <ol id="dex"></ol>
+    <div class="foot">ClingStream+ is fictional. No accounts, payments or personal data are used. Judges in a hurry: press <b>]</b> to skip a step.</div>
+  </aside>
+</main>
+<div id="toasts" aria-live="polite"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+const PATTERNS = {
+  hidden:     ['Hidden Exit',          'The cancel link hides among 14 identical tiny footer links.'],
+  roach:      ['Roach Motel',          'Upgrading takes one click. Leaving takes nine screens.'],
+  shame:      ['Confirmshaming',       'A guilt-trip headline starring a sad cat.'],
+  disguise:   ['Disguised Button',     'The big, green, obvious button keeps you subscribed.'],
+  precheck:   ['Sneaky Pre-check',     'A box you never ticked upgrades you on the way out.'],
+  urgency:    ['Fake Urgency',         'A countdown that panics when you untick the upsell.'],
+  doubleneg:  ['Double Negative',      '"Don\'t not keep" means keep. Logically.'],
+  survey:     ['Survey of Doom',       'A required survey with a rebuttal for every answer.'],
+  goalpost:   ['Moving Goalposts',     '"Question 1 of 3" becomes "2 of 4". Steps grow as you go.'],
+  rigged:     ['Rigged Inputs',        'A love slider that starts at 7/10. Every star is 5 stars.'],
+  maze:       ['Retention Maze',       'Twelve offers, pauses and downgrades. The exit looks like an offer.'],
+  runaway:    ['Runaway Button',       'Cancel dodges your cursor until it gets tired.'],
+  autocorrect:['Sabotage Autocorrect', '"want" becomes "love", "cancel" becomes "continue".'],
+  nopaste:    ['Paste Blocker',        'Pasting is a Platinum feature.'],
+  phone:      ['Call to Cancel',       'Phone only, Tuesdays 3:00–3:04 AM, Moon Standard Time.'],
+  ivr:        ['IVR Labyrinth',        'A phone menu with every option except cancel. Mash 0.'],
+  confirms:   ['Endless Confirms',     'Every "Are you sure?" stacks another dialog and swaps the buttons.'],
+  hold:       ['Hold of Shame',        'Hold for 4 seconds while the cat narrates its feelings.'],
+  winback:    ['Instant Win-back',     'A rejoin offer before the confirmation page even loads.'],
+};
+const KEYS = Object.keys(PATTERNS);
+const ORDER = ['account','shame','survey','maze','runaway','autocorrect','phone','confirms','done'];
+const HINTS = {
+  account:'The exit is hiding in the footer. Look for something… philosophical.',
+  shame:'Untick the Platinum box first. Then find the tiny grey link in the bottom-right corner. ("Don\'t not keep" = keep!)',
+  survey:'Just answer everything. The survey grows, but it does end at 5.',
+  maze:'Keep clicking "Show more offers". The real exit is dressed up as an offer.',
+  runaway:'Chase it 8 times and it gets tired. Or press Tab until Cancel is focused and hit Enter.',
+  autocorrect:'When autocorrect changes a word, press Backspace ONCE to undo it, just like your phone.',
+  phone:'Press Call, then mash 0 five times in a row (like real life) to reach a human. Then press #.',
+  confirms:'Read every question. The buttons swap sides. Last one: press and HOLD.',
+  done:'Do not rejoin. The tiny link is your friend.'
+};
+
+let S;
+function fresh(){ S = {hp:100, found:[], clicks:0, start:Date.now(), end:null, cur:null, timers:[], raf:0, music:null, ac:null}; }
+fresh();
+
+/* ---------- HUD + Dex ---------- */
+function renderHUD(){
+  const on = Math.ceil(S.hp/10);
+  const hp = $('#hp');
+  hp.innerHTML = Array.from({length:10},(_,i)=>`<i class="${i<on?'':'off'}"></i>`).join('');
+  hp.classList.toggle('low', on<=3);
+  $('#pcount').textContent = S.found.length;
+  $('#ptotal').textContent = KEYS.length;
+}
+function renderDex(newKey){
+  $('#dex').innerHTML = KEYS.map((k,i)=> S.found.includes(k)
+    ? `<li class="${k===newKey?'new':''}"><b>${String(i+1).padStart(2,'0')} ${PATTERNS[k][0].toUpperCase()}</b><small>${PATTERNS[k][1]}</small></li>`
+    : `<li class="locked">${String(i+1).padStart(2,'0')} ??? — locked</li>`).join('');
+}
+setInterval(()=>{
+  const ms = (S.end||Date.now()) - S.start, s = Math.floor(ms/1000);
+  $('#clock').textContent = String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+}, 250);
+
+function toast(msg, kind='good'){
+  const t = document.createElement('div');
+  t.className = 'toast '+kind; t.innerHTML = msg;
+  $('#toasts').appendChild(t);
+  while ($('#toasts').children.length > 4) $('#toasts').firstChild.remove();
+  setTimeout(()=>t.classList.add('out'), 3400);
+  setTimeout(()=>t.remove(), 3800);
+}
+function hurt(n){
+  S.hp = Math.max(1, S.hp - n); renderHUD();
+  const b = $('#browser'); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake');
+}
+function pattern(key, delay=0){
+  const run = ()=>{
+    if (S.found.includes(key)) return;
+    S.found.push(key); hurt(5);
+    toast(`<b>☠ DARK PATTERN UNLOCKED</b><br>${PATTERNS[key][0]}`, 'evil');
+    renderDex(key);
+  };
+  delay ? setTimeout(run, delay) : run();
+}
+const later = (fn, ms) => { const id = setTimeout(fn, ms); S.timers.push(id); return id; };
+const every = (fn, ms) => { const id = setInterval(fn, ms); S.timers.push(id); return id; };
+
+/* ---------- Router ---------- */
+function go(name){
+  S.timers.forEach(id=>{clearTimeout(id); clearInterval(id);}); S.timers = [];
+  cancelAnimationFrame(S.raf); stopMusic();
+  S.cur = name;
+  screens[name]();
+  renderHUD();
+}
+function page(html, idx){
+  let top = '';
+  if (idx > 0){
+    const last = ORDER.length-1;
+    const total = idx===last ? last : Math.min(last, idx+2);
+    $('#url').textContent = `account.clingstream.example/cancel?step=${idx}of${total}`;
+    top = `<div class="progress">Step ${idx} of ${total}<div class="bar"><i style="width:${Math.round(idx/total*100)}%"></i></div></div>`;
+    if (idx === 3) pattern('goalpost', 900);
+  } else {
+    $('#url').textContent = 'account.clingstream.example/home';
+  }
+  $('#screen').innerHTML = top + html;
+}
+const kept = (msg='💚 Great choice! Your membership is safe with us.') => { toast(msg,'good'); hurt(3); go('account'); };
+
+const screens = {};
+
+/* 0 — Account page: hidden exit */
+screens.account = () => {
+  const FOOT = [
+    ['About','We are a family. A clingy family.'],['Careers','Now hiring: Retention Wizards.'],
+    ['Press','This is the Press page. Press harder.'],['Privacy','We respect your privacy. Mochi does not.'],
+    ['Cookie Preferences','All cookies are mandatory and delicious.'],['Accessibility','Accessible to everyone except people leaving.'],
+    ['Terms','By reading this you agreed to 3 more years.'],['Investors','Our investors love you specifically.'],
+    ['Sitemap','You are here. Forever.'],['Gift Cards','Give the gift of never leaving.'],
+    ['Cancellation Philosophy',null],['Blog','Latest post: "10 reasons to stay (all of them are Mochi)".'],
+    ['Help Center','Help is a Platinum feature.'],['Legal-ish','Mostly legal.']
+  ];
+  page(`
+    <div class="cs-nav"><span class="cs-logo">ClingStream<sup>+</sup></span><span>Home</span><span>Browse</span><span>My List</span><span class="cs-avatar">P1</span></div>
+    <div class="cs-body">
+      <h2>Account</h2>
+      <div class="plan-card">
+        <div><div class="muted small">Your plan</div><div class="plan-name">Ultra Cozy</div><div class="muted small">$14.99/mo · Member since forever</div></div>
+        <div class="mochi" title="Mochi, our mascot">😺</div>
+      </div>
+      <div class="btn-row">
+        <button class="cs-btn green" data-up="Platinum">Upgrade to Platinum ✨</button>
+        <button class="cs-btn blue" data-up="a family member">Add a family member</button>
+        <button class="cs-btn blue" data-up="a gift card">Buy a gift card</button>
+        <button class="cs-btn ghost" data-manage>Manage plan ▾</button>
+      </div>
+      <p class="muted small">This month: 3h 12m watched · Benefits used: 0 of 47 · Mochi's mood: content</p>
+    </div>
+    <footer class="cs-foot">© 2026 ClingStream Inc. · ${FOOT.map((f,i)=>`<a data-f="${i}">${f[0]}</a>`).join(' · ')}</footer>`, 0);
+
+  $('#screen').querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>{
+    toast(`✨ One click and you've added ${b.dataset.up}! (Not really. But see how easy that was?)`); pattern('roach');
+  });
+  $('[data-manage]').onclick = () => toast('Manage plan: ▸ Upgrade ▸ Upgrade more ▸ Upgrade, but annually');
+  $('#screen').querySelectorAll('[data-f]').forEach(a=>a.onclick=()=>{
+    const f = FOOT[+a.dataset.f];
+    if (f[1]) { toast(f[1]); hurt(1); return; }
+    pattern('hidden'); go('shame');
+  });
+};
+
+/* 1 — Confirmshaming, pre-check, fake urgency, double negative, hidden exit */
+screens.shame = () => {
+  page(`
+    <div class="cs-body center" style="position:relative;padding-bottom:40px">
+      <div class="mochi huge wobble" id="mo">😿</div>
+      <h2>Wait! Are you sure you're sure?</h2>
+      <p>Cancelling means losing <b>47 benefits</b> you have never used. Your playlists will be shredded. <b>Mochi will be notified.</b></p>
+      <button class="cs-btn green xl" id="keep">KEEP MY MEMBERSHIP (RECOMMENDED)</button>
+      <label class="chk"><input type="checkbox" id="plat" checked> <span id="platLbl">Also upgrade me to the 3-year Platinum plan ($899.97, billed now)</span></label>
+      <p class="red" id="cdw">Offer expires in <span id="cd">00:04:59</span></p>
+      <button class="cs-btn grey" id="dnk">Don't not keep my subscription</button>
+      <a class="tiny-exit" id="exit" tabindex="0">no, I prefer to lose everything</a>
+    </div>`, 1);
+  pattern('shame', 400);
+  let s = 299;
+  const fmt = () => $('#cd').textContent = '00:'+String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+  every(()=>{ s = s<=0 ? 299 : s-1; fmt(); }, 1000);
+
+  $('#keep').onclick = () => { pattern('disguise'); kept(); };
+  $('#dnk').onclick = () => { pattern('doubleneg'); kept("Don't not keep = keep. Logic! Membership kept 💚"); };
+  $('#plat').onchange = e => {
+    if (!e.target.checked){
+      $('#platLbl').textContent = 'I decline Platinum and accept that Mochi will sleep alone tonight.';
+      $('#mo').textContent = '🙀'; s = 9; fmt(); pattern('urgency');
+      toast('⏰ Offer ending NOW! Only 9 seconds left!!');
+    } else {
+      $('#platLbl').textContent = 'Also upgrade me to the 3-year Platinum plan ($899.97, billed now)';
+      $('#mo').textContent = '😿';
+    }
+  };
+  const exit = () => {
+    if ($('#plat').checked){
+      pattern('precheck'); hurt(3); $('#mo').textContent = '😻';
+      toast('✨ Platinum upgrade applied! (You left the box ticked.) Untick it to try again.');
+      return;
+    }
+    go('survey');
+  };
+  $('#exit').onclick = exit;
+  $('#exit').onkeydown = e => { if (e.key==='Enter') exit(); };
+};
+
+/* 2 — Survey of doom */
+screens.survey = () => {
+  page(`<div class="cs-body center" id="sv"></div>`, 2);
+  pattern('survey', 500);
+  const Q = [
+    {t:'Why are you leaving us? 💔', type:'radio', opts:[
+      ["It's too expensive", 'It costs less than half a latte a day. Do you hate lattes?'],
+      ["I don't use it enough", "That's what we love about you: low maintenance."],
+      ['I found another service', "We're not jealous. (We are a little jealous.)"],
+      ['I need a break', 'Breaks are healthier together. Have you tried pausing instead?']]},
+    {t:'On a scale of 7 to 10, how much do you love ClingStream?', type:'slider'},
+    {t:'Which reasons to stay resonate with you most? (pick at least one)', type:'check', opts:['The vibes','Mochi','Autoplay at 3 AM','Fear of change','All of the above']},
+    {t:"Please rate Mochi's disappointment level", type:'stars'},
+    {t:'Would you recommend ClingStream to a friend?', type:'yes'}
+  ];
+  let qi = 0;
+  const draw = () => {
+    const q = Q[qi], total = Math.min(Q.length, qi+3);
+    if (qi === 1) pattern('goalpost', 300);
+    let body = '';
+    if (q.type==='radio') body = q.opts.map((o,i)=>`<button class="opt" data-i="${i}">${esc(o[0])}</button>`).join('');
+    if (q.type==='slider') body = `<input type="range" id="sl" min="7" max="10" step="1" value="10"><div class="muted small" style="display:flex;justify-content:space-between;width:min(100%,420px)"><span>7 · Not at all</span><span>10 · A normal amount</span></div><div class="rebut" id="slv">Love level: 10/10 (healthy)</div>`;
+    if (q.type==='check') body = q.opts.map((o,i)=>`<label class="opt"><input type="checkbox" data-c="${i}"> ${esc(o)}</label>`).join('');
+    if (q.type==='stars') body = `<div class="stars" id="st">${'★'.repeat(5).split('').map((s,i)=>`<span data-s="${i}">★</span>`).join('')}</div>`;
+    if (q.type==='yes') body = `<div class="btn-row" style="justify-content:center"><button class="cs-btn blue" data-y>Yes, absolutely!</button><button class="cs-btn blue" data-y>Yes, definitely!</button></div><a class="tiny" id="no" style="cursor:pointer">no</a>`;
+    $('#sv').innerHTML = `
+      <div class="q-head"><span>Exit Survey · Question ${qi+1} of ${total}</span><span class="req">* required</span></div>
+      <h3 style="max-width:560px">${esc(q.t)}</h3>
+      <div style="width:100%;display:flex;flex-direction:column;align-items:center">${body}</div>
+      <div class="rebut" id="rb"></div>
+      ${q.type==='yes' ? '' : '<button class="cs-btn blue" id="next" disabled>Next →</button>'}`;
+    const next = $('#next'), rb = $('#rb');
+    if (next) next.onclick = () => { qi++; qi >= Q.length ? go('maze') : draw(); };
+
+    if (q.type==='radio') $('#sv').querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
+      $('#sv').querySelectorAll('.opt').forEach(x=>x.classList.remove('sel')); b.classList.add('sel');
+      rb.textContent = q.opts[+b.dataset.i][1]; next.disabled = false;
+    });
+    if (q.type==='slider'){
+      next.disabled = false; pattern('rigged', 700);
+      const labels = {7:'(concerning)',8:'(we can work with this)',9:'(almost normal)',10:'(healthy)'};
+      $('#sl').oninput = e => $('#slv').textContent = `Love level: ${e.target.value}/10 ${labels[e.target.value]}`;
+    }
+    if (q.type==='check'){
+      const boxes = [...$('#sv').querySelectorAll('[data-c]')];
+      boxes.forEach(b=>b.onchange=()=>{
+        if (b.dataset.c==='4' && b.checked) boxes.forEach(x=>x.checked=true);
+        const n = boxes.filter(x=>x.checked).length;
+        next.disabled = n===0;
+        rb.textContent = n ? `${n} reason${n>1?'s':''} to stay! Are you sure you want to leave?` : '';
+      });
+    }
+    if (q.type==='stars'){
+      const st = $('#st');
+      st.onmouseover = () => st.classList.add('lit');
+      st.onclick = () => { st.classList.add('lit'); rb.textContent = 'You rated: 5/5 ⭐ Thank you for your honesty.'; next.disabled = false; pattern('rigged'); };
+    }
+    if (q.type==='yes'){
+      const fin = () => { toast('Thanks for recommending us to all your friends! 💚'); go('maze'); };
+      $('#sv').querySelectorAll('[data-y]').forEach(b=>b.onclick=fin);
+      $('#no').onmouseenter = e => e.target.textContent = 'yes (obviously)';
+      $('#no').onclick = fin;
+    }
+  };
+  draw();
+};
+
+/* 3 — Retention maze */
+screens.maze = () => {
+  const POOL = [
+    ['⏸️','Pause for 1 month',"We'll keep charging you, for safekeeping."],
+    ['⬇️','Downgrade to "Kinda Cozy"',"Only $14.98/mo. That's a whole cent."],
+    ['💸','50% off for 3 days','Then back to full price, plus a little extra.'],
+    ['📅','Switch to annual','Save $0.12 per year. Live a little.'],
+    ['🧦','Free ClingStream sock','Left foot only. Right foot ships with Platinum.'],
+    ['😿','A personal apology from Mochi','Delivered at 4 AM, directly onto your face.'],
+    ['🔁','Pause, but louder','Like pausing, but we call you about it.'],
+    ['🪜','Upgrade to downgrade','Go up a tier so you can come back down.'],
+    ['🎁','Free trial of your current plan','You already have it. Now you have it again.'],
+    ['🧙','Talk to a Retention Wizard',"They know one spell. It's \"stay\"."],
+    ['😔','None of these, I guess','Continue cancelling', true],
+    ['🍿','Watch one more episode first','Then decide. (Autoplay is on.)'],
+    ['📦','Mystery box','Contains this exact offer screen.'],
+  ];
+  page(`<div class="cs-body center">
+      <div class="mochi">🥺</div>
+      <h2>Before you go, pick a personalized offer</h2>
+      <p class="muted">We hand-picked these just for you, using an algorithm called "please".</p>
+      <div class="offers" id="of"></div>
+      <button class="cs-btn ghost" id="more"></button>
+    </div>`, 3);
+  pattern('maze', 600);
+  let shown = 6, remaining = 38;
+  const draw = () => {
+    $('#of').innerHTML = POOL.slice(0, shown).map((o,i)=>`<button class="offer" data-i="${i}"><span class="oe">${o[0]}</span><b>${esc(o[1])}</b><span>${esc(o[2])}</span></button>`).join('');
+    $('#more').textContent = `Show more offers (${remaining})`;
+    $('#of').querySelectorAll('.offer').forEach(b=>b.onclick=()=>{
+      const o = POOL[+b.dataset.i];
+      if (o[3]) { toast('Fine. Proceeding. Mochi is drafting a sad poem.'); go('runaway'); return; }
+      toast(`✅ "${esc(o[1])}" applied! You're still subscribed 💚`); hurt(2);
+    });
+  };
+  $('#more').onclick = () => {
+    if (shown >= POOL.length) { toast('That was all of them! (35 more are available in our app.)'); return; }
+    shown = Math.min(POOL.length, shown+3); remaining -= 3; draw();
+  };
+  draw();
+};
+
+/* 4 — Runaway button */
+screens.runaway = () => {
+  page(`<div class="cs-body center">
+      <h2>🎉 Final step!<sup>*</sup></h2>
+      <p class="tiny">*not the final step</p>
+      <p>Click <b>Cancel</b> below to continue.</p>
+      <div class="arena" id="ar">
+        <button class="cs-btn green xl" id="stay">Stay subscribed 💚</button>
+        <button class="cs-btn red runaway" id="rc">Cancel</button>
+      </div>
+    </div>`, 4);
+  const ar = $('#ar'), rc = $('#rc');
+  const LINES = ['Nope!','Too slow','Missed me','Catch me!','Nyoom','*pant*','*wheeze*'];
+  let dodges = 0, tired = false, pos = {x:0, y:0};
+  const place = (x,y) => { pos = {x,y}; rc.style.left = x+'px'; rc.style.top = y+'px'; };
+  place(ar.clientWidth - rc.offsetWidth - 20, 20);
+  const dodge = (cx, cy) => {
+    if (tired) return;
+    dodges++; pattern('runaway');
+    const W = ar.clientWidth - rc.offsetWidth - 8, H = ar.clientHeight - rc.offsetHeight - 8;
+    let x, y, t = 0;
+    do { x = 8 + Math.random()*(W-8); y = 8 + Math.random()*(H-8); t++; }
+    while (t < 30 && Math.hypot(x + rc.offsetWidth/2 - cx, y + rc.offsetHeight/2 - cy) < 170);
+    if (dodges >= 8){
+      tired = true; rc.classList.add('tired'); rc.textContent = 'Cancel (exhausted) 😮‍💨';
+      toast('The Cancel button is exhausted. It will stay put now.');
+    } else rc.textContent = LINES[dodges-1];
+    place(x, y);
+  };
+  ar.onmousemove = e => {
+    const r = ar.getBoundingClientRect();
+    const cx = e.clientX - r.left, cy = e.clientY - r.top;
+    const bx = pos.x + rc.offsetWidth/2, by = pos.y + rc.offsetHeight/2;
+    if (Math.abs(cx-bx) < rc.offsetWidth/2 + 40 && Math.abs(cy-by) < rc.offsetHeight/2 + 40) dodge(cx, cy);
+  };
+  rc.onclick = e => {
+    if (tired || e.detail === 0){
+      if (!tired) toast("⌨️ Keyboard users can't be dodged. Accessibility wins!");
+      go('autocorrect');
+    } else {
+      const r = ar.getBoundingClientRect(); dodge(e.clientX - r.left, e.clientY - r.top);
+    }
+  };
+  $('#stay').onclick = () => kept();
+};
+
+/* 5 — Sabotage autocorrect */
+screens.autocorrect = () => {
+  page(`<div class="cs-body center">
+      <div class="mochi huge">🙀</div>
+      <h2>Confirm it's really you</h2>
+      <p>To continue, type this phrase exactly:</p>
+      <div class="phrase">I want to cancel</div>
+      <input id="ac" class="cs-input" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Type here…">
+      <div class="ac-flash" id="af">✨ SmartType™ autocorrect is ON to help you.</div>
+      <button class="cs-btn blue" id="acgo">Confirm</button>
+    </div>`, 5);
+  const MAP = {want:'love', cancel:'continue', leave:'stay', quit:'quilt'};
+  const inp = $('#ac'), af = $('#af');
+  const accepted = new Set();
+  let last = null, prev = '', fails = 0;
+  const flash = h => { af.innerHTML = h; af.classList.remove('pop'); void af.offsetWidth; af.classList.add('pop'); };
+  const correct = withSpace => {
+    const v = inp.value, m = withSpace ? v.match(/(\S+)(\s)$/) : v.match(/(\S+)$/);
+    if (!m) return false;
+    const w = m[1], lw = w.toLowerCase().replace(/[^a-z]/g,'');
+    if (!MAP[lw] || accepted.has(lw)) return false;
+    const after = v.slice(0, m.index) + MAP[lw] + (withSpace ? m[2] : '');
+    last = {before:v, after, word:lw};
+    inp.value = prev = after;
+    flash(`✨ Autocorrected “${esc(w)}” → “${MAP[lw]}”`);
+    pattern('autocorrect'); hurt(1);
+    return true;
+  };
+  const undo = () => {
+    inp.value = prev = last.before; accepted.add(last.word);
+    flash(`↩️ Fine. Keeping “${last.word}”. Mochi noticed.`); last = null;
+  };
+  inp.onkeydown = e => {
+    if (e.key === 'Backspace' && last && inp.value === last.after){ e.preventDefault(); undo(); }
+    else if (e.key === 'Enter') submit();
+  };
+  inp.oninput = e => {
+    if (e.inputType === 'deleteContentBackward' && last && prev === last.after){ undo(); return; }
+    if (last && inp.value !== last.after) last = null;
+    if (/\s$/.test(inp.value)) correct(true);
+    prev = inp.value;
+  };
+  inp.onpaste = e => { e.preventDefault(); pattern('nopaste'); toast('📋 Pasting is a Platinum feature.'); };
+  const submit = () => {
+    if (correct(false)) return;
+    const n = inp.value.toLowerCase().replace(/[^a-z ]/g,'').replace(/\s+/g,' ').trim();
+    if (n === 'i want to cancel'){ toast('Identity confirmed. Unfortunately.'); go('phone'); return; }
+    fails++; hurt(1);
+    toast(/love|continue/.test(n) ? 'Aww, we love to continue too! 💚 (Type it exactly, though.)' : "That doesn't match “I want to cancel”. Mochi is confused.");
+    if (fails >= 2) flash('Psst: autocorrect has an undo. You know the one. ⌫');
+  };
+  $('#acgo').onclick = submit;
+  inp.focus();
+};
+
+/* 6 — Call to cancel */
+screens.phone = () => {
+  page(`<div class="cs-body center">
+      <h2>For your security, cancellations are handled by phone ☎️</h2>
+      <p class="muted small">Cancellation Line hours: <b>Tuesdays, 3:00–3:04 AM</b> (Moon Standard Time). Current status: <span class="red">CLOSED</span>.<br>Good news: our Virtual Phone™ is open right now. Lucky you.</p>
+      <div class="phone">
+        <div class="phone-screen" id="ps"><div class="ps-line dim">Ready to dial 1-800-CLINGY</div></div>
+        <div class="phone-status" id="pst">📶 Not connected</div>
+        <div class="keypad">${'123456789*0#'.split('').map(k=>`<button class="key" data-k="${k}">${k}</button>`).join('')}</div>
+        <div class="phone-actions"><button class="cs-btn green" id="call">📞 Call</button><button class="cs-btn red" id="hang">Hang up</button></div>
+      </div>
+    </div>`, 6);
+  pattern('phone', 500);
+  const ps = $('#ps'), pst = $('#pst');
+  let st = 'idle', zeros = 0, seq = [];
+  const say = (t, cls='') => { const d = document.createElement('div'); d.className = 'ps-line '+cls; d.textContent = t; ps.appendChild(d); ps.scrollTop = ps.scrollHeight; };
+  const MENU = ['🤖 Thank you for calling ClingStream+. Your call is important to us.','Press 1 to upgrade.','Press 2 to hear our offers.','Press 3 for Pig Latin.','Press 4 to speak with Mochi.','To cancel, please hang up and visit our website.'];
+  const R = {
+    '1':'Upgrading you to Platinum… just kidding. Press 1 again to really upgrade.',
+    '2':'Our offers are: staying, and staying happily. Returning to main menu.',
+    '3':'Ankthay ouyay orfay allingcay. Esspray onetay otay upgradeway.',
+    '4':'Mochi: “mrrp.” (Mochi does not know how to cancel things.)',
+    '*':'★ Star members get priority upgrades!',
+    '#':'The # key is reserved for Platinum callers.'
+  };
+  const ZERO = ['Invalid option.','Invalid option. Please stop.','We can hear you pressing 0.','…okay. Okay. Fine.'];
+  const clear = () => { seq.forEach(clearTimeout); seq = []; };
+  const queue = (lines, gap, cls) => lines.forEach((l,i)=>{ const id = later(()=>say(l, cls), i*gap); seq.push(id); });
+
+  $('#call').onclick = () => {
+    if (st !== 'idle') return;
+    st = 'menu'; zeros = 0; pst.textContent = '📶 Connected · ClingStream Retention';
+    queue(MENU, 650); pattern('ivr', MENU.length*650);
+  };
+  $('#hang').onclick = () => {
+    clear(); stopMusic(); st = 'idle'; zeros = 0;
+    ps.innerHTML = '<div class="ps-line dim">Call ended. Thanks for calling! 💚</div>'; pst.textContent = '📶 Not connected';
+  };
+  const transfer = () => {
+    st = 'hold'; say('Transferring you to a human… 🎵 (hold music)'); startMusic();
+    let wait = 47;
+    const tip = {40:'Your call is very important to us.',30:'Did you know? You could just… not cancel.',18:'Mochi is also on hold. In solidarity.',8:'Almost there! Probably!'};
+    const id = every(()=>{
+      wait--; pst.textContent = `🎵 On hold · Estimated wait: ${wait} min`;
+      if (tip[wait]) say(tip[wait], 'dim');
+      if (wait <= 0){
+        clearInterval(id); stopMusic(); st = 'agent'; pst.textContent = '📶 Connected · Brenda (Retention)';
+        say('Brenda: Hi! I can absolutely help you cancel today.', 'agent');
+        say('Brenda: Press # to confirm. Pressing ANY other key accepts 3 free months.', 'agent');
+      }
+    }, 140);
+  };
+  $('#screen').querySelectorAll('.key').forEach(b=>b.onclick=()=>{
+    const k = b.dataset.k; beep(k);
+    if (st === 'idle'){ say('(You are pressing buttons on a phone that is not in a call.)','dim'); return; }
+    if (st === 'hold'){ say('Pressing buttons does not make the music stop.','dim'); return; }
+    if (st === 'agent'){
+      if (k === '#'){ toast('📞 Brenda: "Okay… processing. Just a couple of quick confirmations."'); go('confirms'); }
+      else { say('Brenda: 3 free months applied! 💚 You are still subscribed. Press # to really cancel.','agent'); hurt(2); }
+      return;
+    }
+    clear();
+    if (k === '0'){
+      say(ZERO[Math.min(zeros, ZERO.length-1)], 'dim'); zeros++;
+      if (zeros >= 5) transfer();
+    } else {
+      zeros = 0;
+      say(R[k] || 'That option is not available in your region. Your region is: here.');
+    }
+  });
+};
+
+/* 7 — Endless confirms + hold of shame */
+screens.confirms = () => {
+  page(`<div class="cs-body center"><h2>Processing your request…</h2><p class="muted small">Just a few quick confirmations. Totally normal.</p><div class="dialog-stage" id="ds"></div></div>`, 7);
+  pattern('confirms', 600);
+  const R = [
+    {q:'Are you sure you want to cancel?', sub:'This is the only confirmation. Promise.', a:[['No, keep my plan 💚',false],['Yes, cancel',true]]},
+    {q:'Are you sure you want to keep your subscription?', sub:'Okay, THIS one is the last one.', a:[['No',true],['Yes, keep it 💚',false]]},
+    {q:"Are you sure you don't want to not cancel?", sub:'Definitely the last one. Probably.', a:[['Yes',true],['Keep 💚',false]]},
+    {hold:true}
+  ];
+  const ds = $('#ds');
+  let round = 0;
+  const add = () => {
+    ds.querySelectorAll('.dialog').forEach(d=>d.classList.add('behind'));
+    const r = R[round], d = document.createElement('div');
+    d.className = 'dialog';
+    d.style.transform = `translate(${round*10}px,${round*14}px) rotate(${(round%2?1:-1)*round*0.8}deg)`;
+    if (r.hold){
+      d.innerHTML = `<h3>Final confirmation</h3><p class="muted small">Press and hold for 4 seconds to cancel.</p>
+        <button class="hold-btn" id="hold"><span class="fill" id="fill"></span><span class="lbl">Hold to cancel</span></button>
+        <p class="hold-msg" id="hm">Mochi is watching.</p>`;
+      ds.appendChild(d); holdLogic(); return;
+    }
+    d.innerHTML = `<h3>${esc(r.q)}</h3><p class="muted small">${esc(r.sub)}</p><div class="row">${r.a.map((a,i)=>
+      `<button class="cs-btn ${a[1]?'grey':'green'}" data-i="${i}">${esc(a[0])}</button>`).join('')}</div>`;
+    ds.appendChild(d);
+    d.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+      if (r.a[+b.dataset.i][1]){ round++; add(); }
+      else { toast("💚 Great news, we've kept your subscription! …Let's start these over."); hurt(4); ds.innerHTML = ''; round = 0; add(); }
+    });
+  };
+  const holdLogic = () => {
+    const btn = $('#hold'), fill = $('#fill'), hm = $('#hm');
+    const MSG = [[0,'Mochi is packing a tiny suitcase…'],[.3,'Mochi is writing you a farewell letter…'],[.55,'Mochi started a sad playlist. On ClingStream.'],[.8,'Mochi is learning to live without you…']];
+    let t0 = null;
+    const tick = () => {
+      const p = Math.min(1, (performance.now()-t0)/4000);
+      fill.style.width = p*100 + '%';
+      hm.textContent = MSG.filter(m=>p>=m[0]).pop()[1];
+      if (p >= 1){ t0 = null; clearInterval(iv); toast('Cancellation request submitted. Mochi will be okay.'); go('done'); }
+    };
+    let iv = 0;
+    const start = e => { if (t0) return; if (e) e.preventDefault(); pattern('hold'); t0 = performance.now(); iv = every(tick, 30); };
+    const stop = () => { if (!t0) return; t0 = null; clearInterval(iv); fill.style.width = '0'; hm.textContent = 'Mochi breathes a sigh of relief. 😌'; };
+    btn.onpointerdown = start; btn.onpointerup = stop; btn.onpointerleave = stop; btn.onpointercancel = stop;
+    btn.oncontextmenu = e => e.preventDefault();
+    btn.onkeydown = e => { if ((e.key===' '||e.key==='Enter') && !e.repeat){ e.preventDefault(); start(); } };
+    btn.onkeyup = e => { if (e.key===' '||e.key==='Enter') stop(); };
+  };
+  add();
+};
+
+/* 8 — Win-back fake-out, then real confirmation */
+screens.done = () => {
+  page(`<div class="cs-body center">
+      <div class="mochi huge">😻</div>
+      <h2>Wait!! One last thing!</h2>
+      <p>Rejoin right now for just <b>$0.99/mo forever*</b></p>
+      <button class="cs-btn green xl" id="rejoin">REJOIN &amp; SAVE 93%</button>
+      <p class="tiny">*forever = 1 month, then $49.99/mo</p>
+      <a class="tiny-exit static" id="fin" tabindex="0">continue to my confirmation</a>
+    </div>`, 8);
+  pattern('winback', 400);
+  $('#rejoin').onclick = () => { toast("Welcome back!! 💚 …kidding. We're hostile, not heartless. Find the tiny link."); hurt(3); };
+  const fin = () => receipt();
+  $('#fin').onclick = fin; $('#fin').onkeydown = e => { if (e.key==='Enter') fin(); };
+};
+function receipt(){
+  S.end = Date.now();
+  const secs = Math.round((S.end - S.start)/1000);
+  page(`<div class="cs-body center" style="position:relative">
+      <div class="stamp">CANCELLED</div>
+      <h2>Your ClingStream+ subscription has been cancelled.</h2>
+      <p class="muted small">Confirmation #CS-404-FREEDOM · Effective immediately · No further charges. Mochi is fine (Mochi is an emoji).</p>
+      <div class="score">
+        <div><b>${Math.floor(secs/60)}:${String(secs%60).padStart(2,'0')}</b><span>time to escape</span></div>
+        <div><b>${S.clicks}</b><span>clicks spent</span></div>
+        <div><b>${S.hp}%</b><span>patience left</span></div>
+        <div><b>${S.found.length}/${KEYS.length}</b><span>dark patterns survived</span></div>
+      </div>
+      <h3>Dark patterns you survived</h3>
+      <ol class="survived">${S.found.map(k=>`<li><b>${PATTERNS[k][0]}</b> — ${PATTERNS[k][1]}</li>`).join('')}</ol>
+      <div class="btn-row" style="justify-content:center"><button class="cs-btn blue" id="again">Play again</button></div>
+    </div>`, 8);
+  $('#url').textContent = 'account.clingstream.example/cancel/confirmed';
+  $('#again').onclick = restart;
+  const box = $('#screen');
+  for (let i=0;i<36;i++){
+    const c = document.createElement('span'); c.className = 'confetti';
+    c.textContent = ['🎉','✨','🎊','🕊️','💸'][i%5];
+    c.style.left = Math.random()*100 + '%';
+    c.style.animationDuration = (2.2 + Math.random()*2) + 's';
+    c.style.animationDelay = Math.random()*0.8 + 's';
+    box.appendChild(c); setTimeout(()=>c.remove(), 5200);
+  }
+}
+
+/* ---------- Audio ---------- */
+function audio(){ try { S.ac = S.ac || new (window.AudioContext||window.webkitAudioContext)(); S.ac.resume(); return S.ac; } catch(e){ return null; } }
+function tone(f, dur, vol=0.04, type='triangle'){
+  const ctx = audio(); if (!ctx) return;
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = type; o.frequency.value = f;
+  g.gain.setValueAtTime(vol, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+  o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime + dur + 0.02);
+}
+function beep(k){ const f = {'1':697,'2':770,'3':852,'4':941,'5':1209,'6':1336,'7':1477,'8':1633,'9':900,'0':1000,'*':600,'#':650}[k]; tone(f, 0.12, 0.03, 'sine'); }
+function startMusic(){
+  const notes = [523,659,784,659,587,698,880,698,523,659,784,1047]; let k = 0;
+  S.music = setInterval(()=>tone(notes[k++ % notes.length], 0.28, 0.025), 300);
+}
+function stopMusic(){ clearInterval(S.music); S.music = null; }
+
+/* ---------- Global ---------- */
+function restart(){ stopMusic(); fresh(); renderDex(); go('account'); }
+$('#hintBtn').onclick = () => { toast('💡 '+HINTS[S.cur], 'hint'); hurt(2); };
+$('#restartBtn').onclick = restart;
+$('#browser').addEventListener('click', () => S.clicks++, true);
+document.addEventListener('keydown', e => {
+  if (e.key !== ']' || /INPUT|TEXTAREA/.test(document.activeElement.tagName)) return;
+  const i = ORDER.indexOf(S.cur);
+  if (i < ORDER.length-1) go(ORDER[i+1]); else if (!S.end) receipt();
+});
+renderDex(); go('account');
+</script>
+</body>
+</html>

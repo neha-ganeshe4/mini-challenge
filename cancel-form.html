@@ -1,0 +1,755 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cancel Membership</title>
+<style>
+:root{
+  --bg:#f4f5f8; --card:#ffffff; --text:#1d2230; --muted:#6b7280; --line:#e3e6ec;
+  --brand:#6d28d9; --brand-2:#8b5cf6; --green:#15803d; --red:#dc2626; --amber:#f59e0b;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5;min-height:100vh}
+button{font:inherit;cursor:pointer}
+a{color:var(--brand);cursor:pointer}
+
+.top{background:var(--brand);color:#fff}
+.top .in{max-width:1200px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.logo{font-weight:800;font-size:20px;margin-right:auto}
+.top span{opacity:.85;font-size:14px}
+.crumbs{max-width:1200px;margin:0 auto;padding:10px 16px;font-size:12px;color:var(--muted)}
+.layout{max-width:1200px;margin:0 auto;padding:0 16px 60px;display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:20px;align-items:start}
+@media (max-width:960px){.layout{grid-template-columns:1fr}}
+#app{min-width:0}
+
+/* dark pattern dex */
+.dex{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow-y:auto;background:#0c1433;color:#e8ecff;border:1px solid rgba(62,224,255,.3);border-radius:12px;padding:14px;font-family:ui-monospace,Consolas,monospace}
+@media (max-width:960px){.dex{position:static;max-height:none}}
+.dex h3{margin:0 0 2px;font-size:13px;letter-spacing:.18em;color:#ff3ea5;display:flex;justify-content:space-between}
+.dex h3 span{color:#ffd23e}
+.dex .sub{font-size:11px;color:#8a93b8;margin-bottom:8px}
+.dex ol{list-style:none;margin:0;padding:0;font-size:12px}
+.dex li{padding:6px 0;border-top:1px solid rgba(255,255,255,.07)}
+.dex li b{color:#ffd23e;letter-spacing:.03em}
+.dex li small{display:block;color:#8a93b8;margin-top:2px;line-height:1.4}
+.dex li.locked{color:#3c4468}
+.dex li.new{animation:flash 1.2s}
+.dex .dfoot{font-size:10px;color:#8a93b8;margin-top:10px;line-height:1.5}
+@keyframes flash{0%{background:rgba(255,62,165,.35)}}
+
+/* account home */
+.plan{display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px solid var(--line);border-radius:12px;padding:16px;margin:10px 0}
+.btnrow{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0;align-items:flex-end}
+.btnrow .btn{padding:11px 15px}
+.sneaky{font-size:9px;color:#c9cdd4;text-decoration:none;margin-left:2px;line-height:1}
+.sneaky:hover{color:#b3b8c0}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-top:10px}
+.tile{aspect-ratio:16/10;border-radius:10px;border:0;color:#fff;font-weight:700;font-size:13px;display:flex;align-items:flex-end;padding:8px;text-align:left}
+.foot{border-top:1px solid var(--line);margin-top:8px;padding:14px 4px;font-size:10px;color:#a3a8b1;line-height:1.9}
+.foot a{color:#a3a8b1;text-decoration:none}
+.foot a:hover{text-decoration:underline}
+.chk{display:flex;gap:8px;align-items:flex-start;font-size:14px;margin:12px 0 0}
+.acflash{font-size:13px;color:var(--brand);margin-top:6px;min-height:20px}
+.acflash.pop{animation:pop .35s}
+@keyframes pop{50%{transform:scale(1.06)}}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:24px;margin-bottom:16px}
+h1{font-size:28px;margin:0 0 6px} h2{font-size:22px;margin:0 0 6px} h3{margin:0 0 4px}
+.muted{color:var(--muted)} .small{font-size:13px} .tiny{font-size:11px;color:#9ca3af}
+
+.btn{border:0;border-radius:10px;padding:12px 20px;font-weight:700;font-size:15px;color:#fff;background:var(--brand)}
+.btn.green{background:var(--green)} .btn.red{background:var(--red)} .btn.grey{background:#e5e7eb;color:#4b5563}
+.btn.ghost{background:#fff;color:var(--text);border:1px solid #d1d5db}
+.btn.big{font-size:18px;padding:16px 26px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+
+/* landing */
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px}
+@media (max-width:700px){.choices{grid-template-columns:1fr}}
+.choice{border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:8px;background:#fff}
+.choice.hot{border:2px solid var(--brand);background:linear-gradient(180deg,#f5f0ff,#fff);position:relative}
+.choice.hot::before{content:"MOST POPULAR";position:absolute;top:-11px;left:16px;background:var(--brand);color:#fff;font-size:11px;font-weight:800;padding:2px 10px;border-radius:20px;letter-spacing:.08em}
+.price{font-size:34px;font-weight:900}
+.choice ul{margin:4px 0 8px;padding-left:18px;font-size:14px}
+.choice .btn{margin-top:auto}
+
+/* progress */
+.sticky{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0}
+.prog{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);flex-wrap:wrap;gap:4px 12px}
+.bar{height:8px;background:#e5e7eb;border-radius:6px;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;background:var(--brand);transition:width .6s}
+
+/* form */
+.field{border-top:1px solid var(--line);padding:18px 0}
+.field:first-of-type{border-top:0}
+.field > label, .field .q{font-weight:700;display:block;margin-bottom:2px}
+.field .num{color:var(--brand);margin-right:6px}
+.req{color:var(--red)}
+.help{font-size:13px;color:var(--muted);margin-bottom:8px}
+.field input[type=text], .field input[type=number], .field input[type=date], .field select, .field textarea{
+  width:100%;font:inherit;font-size:15px;padding:10px 12px;border:1px solid #cfd4dc;border-radius:8px;background:#fff;color:var(--text)}
+.field textarea{min-height:110px;resize:vertical}
+.field input:focus, .field select:focus, .field textarea:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(109,40,217,.15)}
+.field.bad input, .field.bad select, .field.bad textarea, .field.bad canvas{border-color:var(--red);background:#fff7f7}
+.meta{display:flex;justify-content:space-between;gap:10px;font-size:12px;margin-top:4px}
+.err{color:var(--red);font-weight:600}
+.count{color:var(--muted);white-space:nowrap}
+.count.ok{color:var(--green)}
+.opts label{display:flex;gap:8px;align-items:flex-start;padding:5px 0;font-size:14px;font-weight:400}
+.sig{width:100%;height:150px;border:1px dashed #9ca3af;border-radius:8px;background:#fff;touch-action:none;display:block}
+.formerr{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;padding:10px 14px;border-radius:8px;font-size:14px;margin-bottom:12px;display:none}
+.actions{display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap;margin-top:12px}
+
+/* checkout */
+.co{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}
+@media (max-width:700px){.co{grid-template-columns:1fr}}
+.line{display:flex;justify-content:space-between;padding:7px 0;font-size:14px;border-bottom:1px dashed var(--line)}
+.line.total{font-size:20px;font-weight:900;border-bottom:0;padding-top:12px}
+.pm{display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:12px;margin:8px 0;font-size:14px}
+.pm.off{opacity:.5}
+.spinner{width:36px;height:36px;border:4px solid #e5e7eb;border-top-color:var(--brand);border-radius:50%;animation:spin 1s linear infinite;margin:10px auto}
+
+/* ads */
+.ad-ov{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:40;display:flex;align-items:center;justify-content:center;padding:16px}
+.ad{width:min(100%,860px)}
+.ad-screen{position:relative;aspect-ratio:16/9;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;text-align:center;color:#fff;padding:24px}
+.ad-tag{position:absolute;top:10px;left:12px;font-size:12px;background:rgba(0,0,0,.45);padding:3px 8px;border-radius:4px}
+.ad-why{position:absolute;top:10px;right:12px;font-size:11px;opacity:.8}
+.ad-emoji{font-size:clamp(48px,10vw,96px);line-height:1}
+.ad-line{font-size:clamp(20px,4.2vw,42px);font-weight:900;text-shadow:0 3px 14px rgba(0,0,0,.35);animation:adin .5s}
+.ad-paused{position:absolute;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;font-size:20px;font-weight:700;padding:20px}
+.ad-bar{height:5px;background:rgba(255,255,255,.2);margin-top:8px;border-radius:3px;overflow:hidden}
+.ad-bar i{display:block;height:100%;background:#facc15;width:0}
+.ad-foot{display:flex;justify-content:space-between;align-items:center;color:#d1d5db;font-size:13px;margin-top:8px;gap:10px}
+.skip{background:rgba(0,0,0,.6);color:#fff;border:1px solid rgba(255,255,255,.5);padding:10px 18px;font-size:14px;border-radius:4px;min-width:150px}
+.skip.real{background:#facc15;color:#111;border-color:#facc15;font-weight:800}
+
+/* modal + toast */
+.modal-ov{position:fixed;inset:0;background:rgba(15,18,30,.55);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:#fff;border-radius:14px;max-width:560px;width:100%;padding:22px;max-height:85vh;display:flex;flex-direction:column}
+.modal .scroll{overflow-y:auto;font-size:13px;color:#4b5563;margin:10px 0;padding-right:6px}
+#toasts{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:60;display:flex;flex-direction:column;gap:8px;align-items:center;width:min(92vw,460px)}
+.toast{background:#1f2937;color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;box-shadow:0 8px 20px rgba(0,0,0,.2);animation:up .25s;text-align:center}
+
+.stamp{display:inline-block;border:4px solid var(--green);color:var(--green);font-weight:900;font-size:28px;letter-spacing:.15em;padding:4px 16px;transform:rotate(-5deg);border-radius:6px;margin:6px 0 12px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
+.stats div{background:#f5f0ff;border-radius:10px;padding:10px;text-align:center}
+.stats b{display:block;font-size:22px;color:var(--brand)}
+.dp{columns:2;column-gap:28px;font-size:14px;padding-left:20px}
+@media (max-width:600px){.dp{columns:1}.stats{grid-template-columns:1fr}}
+.dp li{break-inside:avoid;margin-bottom:6px}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes adin{from{opacity:0;transform:scale(.85)}}
+@keyframes up{from{opacity:0;transform:translateY(10px)}}
+</style>
+</head>
+<body>
+<div class="top"><div class="in"><div class="logo">ClingStream<sup>+</sup></div><span>Home</span><span>Browse</span><span>Help</span><span>👤 player_one</span></div></div>
+<div class="crumbs" id="crumbs">Home › Account</div>
+<div class="layout">
+  <div id="app"></div>
+  <aside class="dex">
+    <h3>DARK PATTERN DEX <span id="dexc"></span></h3>
+    <div class="sub">Every trick you survive gets logged here.</div>
+    <ol id="dex"></ol>
+    <div class="dfoot">ClingStream+ is fictional. No real accounts, payments or personal data are used.</div>
+  </aside>
+</div>
+<div id="toasts" aria-live="polite"></div>
+
+<script>
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const app = $('#app');
+const TODAY = new Date().toISOString().slice(0,10);
+
+const DP = {
+  hidden:['Hidden Exit','The only way to cancel is a 9px grey "cancellation policy" link hiding next to the big buttons.'],
+  roach:['Roach Motel','Upgrading takes one click. Leaving takes four form parts and five ads.'],
+  disguise:['Disguised Button','The big green button keeps you subscribed.'],
+  upsell:['Sneaky Pre-check','A ticked box upgrades you to Platinum on your way out.'],
+  doubleneg:['Double Negative','"Don\'t not keep" means keep. Logically.'],
+  paytoleave:['Pay-to-Leave','Skipping the form costs $200.'],
+  baitswitch:['Bait-and-Switch Pricing','$200 on the button, $300 at checkout.'],
+  drip:['Drip Fees','A processing fee, a convenience fee, and a Mochi surcharge.'],
+  precheck:['Sneaky Add-on','A Platinum trial already ticked in your cart.'],
+  declined:['Rigged Checkout','Every payment method is fake or declined. Back to the form.'],
+  ads:['Unskippable Ads','Ad breaks between every part of the form.'],
+  fakeskip:['Fake Skip Button','"Skip Ad" upsells you and restarts the countdown.'],
+  attention:['Attention Tax','The ad pauses whenever you look away.'],
+  adcount:['Growing Ad Count','"Ad 1 of 1" becomes "Ad 2 of 2".'],
+  essays:['Forced Essays','Every answer has a minimum length. All fields are required.'],
+  goalpost:['Moving Goalposts','"Part 1 of 3" becomes "Part 2 of 4". Time remaining goes up.'],
+  vague:['Vague Errors','"Something is wrong." What? Somewhere.'],
+  trivia:['Trivia Gate',"You must know Mochi's middle name. It's buried in the Terms."],
+  rigged:['Rigged Inputs','"Pick 1–10." Anything below 8 is "for Platinum members".'],
+  trap:['Trap Checkbox','One of the legal boxes keeps your subscription.'],
+  nopaste:['Paste Blocker','You have to type the oath by hand.'],
+  autocorrect:['Sabotage Autocorrect','"leaving" becomes "staying", "wrong" becomes "right". Backspace undoes it.'],
+  session:['Session Scare','"Your session will expire!" (It never does.)'],
+  delay:['Fake Processing Time','"6–8 business weeks." Unless you find the tiny link.'],
+};
+const S = {found:[], start:Date.now(), adsWatched:0, adSecs:0, values:{}, section:0, idle:0, demo:null, acAccepted:new Set(), acFinal:null};
+const DKEYS = Object.keys(DP);
+const pad = n => String(n).padStart(2,'0');
+function renderDex(n){
+  $('#dex').innerHTML = DKEYS.map((k,i) => S.found.includes(k)
+    ? `<li class="${k===n?'new':''}"><b>${pad(i+1)} ${DP[k][0].toUpperCase()}</b><small>${DP[k][1]}</small></li>`
+    : `<li class="locked">${pad(i+1)} ??? — locked</li>`).join('');
+  $('#dexc').textContent = `${S.found.length}/${DKEYS.length}`;
+}
+function mark(k){
+  if (S.found.includes(k)) return;
+  S.found.push(k); renderDex(k);
+  toast(`<b style="color:#ff6fb5;letter-spacing:.08em">☠ DARK PATTERN UNLOCKED</b><br>${DP[k][0]}`);
+}
+const crumbs = t => $('#crumbs').textContent = t;
+
+/* ============ 0. Account home: hidden exit ============ */
+function home(){
+  S.demo = null; crumbs('Home › Account');
+  const FOOT = [
+    ['About','We are a family. A clingy family.'],['Careers','Now hiring: Retention Wizards.'],
+    ['Press','This is the Press page. Press harder.'],['Privacy','We respect your privacy. Mochi does not.'],
+    ['Cookie Preferences','All cookies are mandatory and delicious.'],['Accessibility','Accessible to everyone except people leaving.'],
+    ['Terms',null,'terms'],['Investors','Our investors love you specifically.'],
+    ['Sitemap','You are here. Forever.'],['Gift Cards','Give the gift of never leaving.'],
+    ['Refunds','Refunds are a Platinum feature.'],['Blog','Latest post: "10 reasons to stay (all of them are Mochi)".'],
+    ['Help Center','Help is a Platinum feature.'],['Legal-ish','Mostly legal.']
+  ];
+  const SHOWS = [['Paint Drying: S4','#64748b'],['Mochi Cooks','#b45309'],['Love Is Buffering','#be185d'],['The Autoplay','#1d4ed8'],['Still Watching?','#047857'],['Just One More','#7c3aed']];
+  app.innerHTML = `
+    <div class="card">
+      <h2>Account</h2>
+      <div class="plan">
+        <div><div class="muted small">Your plan</div><div style="font-size:22px;font-weight:800">Ultra Cozy</div><div class="muted small">$14.99/mo · Member since forever</div></div>
+        <div style="font-size:44px" title="Mochi, our mascot">😺</div>
+      </div>
+      <div class="btnrow">
+        <button class="btn green" data-up="Platinum">Upgrade to Platinum ✨</button>
+        <button class="btn" data-up="a family member">Add a family member</button>
+        <button class="btn" data-up="a gift card">Buy a gift card</button>
+        <button class="btn ghost" id="manage">Manage plan ▾</button>
+        <a href="#" class="sneaky" id="exitlink">cancellation policy</a>
+      </div>
+      <p class="muted small">This month: 3h 12m watched · Benefits used: 0 of 47 · Mochi's mood: content</p>
+    </div>
+    <div class="card">
+      <h3>Continue watching</h3>
+      <div class="tiles">${SHOWS.map(s=>`<button class="tile" style="background:${s[1]}">${s[0]}</button>`).join('')}</div>
+      <footer class="foot">© 2026 ClingStream Inc. · ${FOOT.map((f,i)=>`<a href="#" data-f="${i}">${f[0]}</a>`).join(' · ')}</footer>
+    </div>`;
+  $$('[data-up]').forEach(b => b.onclick = () => { mark('roach'); toast(`✨ One click and you've added ${b.dataset.up}! (Not really. But see how easy that was?)`); });
+  $('#manage').onclick = () => toast('Manage plan: ▸ Upgrade ▸ Upgrade more ▸ Upgrade, but annually');
+  $$('.tile').forEach(b => b.onclick = () => toast('▶ Autoplay started. Just one more episode.'));
+  $$('[data-f]').forEach(a => a.onclick = e => {
+    e.preventDefault();
+    const f = FOOT[+a.dataset.f];
+    if (f[2] === 'terms') return terms();
+    toast(f[1]);
+  });
+  $('#exitlink').onclick = e => { e.preventDefault(); mark('hidden'); landing(); };
+}
+function toast(msg, ms=3200){
+  const t = document.createElement('div'); t.className = 'toast'; t.innerHTML = msg;
+  $('#toasts').appendChild(t); while ($('#toasts').children.length > 3) $('#toasts').firstChild.remove();
+  setTimeout(()=>t.remove(), ms);
+}
+function modal(html){
+  const ov = document.createElement('div'); ov.className = 'modal-ov';
+  ov.innerHTML = `<div class="modal">${html}</div>`; document.body.appendChild(ov);
+  return ov;
+}
+
+/* ============ 1. Landing ============ */
+function landing(){
+  S.demo = null; crumbs('Help Center › Account › Membership › Leaving (sad) › Form CS-404');
+  app.innerHTML = `
+  <div class="card">
+    <h1>We're sorry to see you go 😿</h1>
+    <p class="muted">Mochi has been informed and is taking it about as well as you'd expect.</p>
+    <button class="btn green big" id="keep" style="width:100%">KEEP MY MEMBERSHIP (RECOMMENDED)</button>
+    <label class="chk"><input type="checkbox" id="upsell" checked> <span id="upl">Also upgrade me to the 3-year Platinum plan ($899.97, billed today)</span></label>
+    <p class="muted" style="margin-top:18px">Or, choose how you'd like to leave:</p>
+    <div class="choices">
+      <div class="choice">
+        <h3>Standard Cancellation</h3>
+        <div class="price">Free</div>
+        <ul><li>Complete Form CS-404 (4 parts)</li><li>Approx. 47 minutes</li><li>Includes a few short messages from our sponsors</li></ul>
+        <button class="btn ghost" id="free">Start the form</button>
+      </div>
+      <div class="choice hot">
+        <h3>⚡ Express Cancellation</h3>
+        <div class="price">$200</div>
+        <ul><li>Skip the form entirely</li><li>No ads, no questions</li><li>Cancelled in 1 click*</li></ul>
+        <button class="btn big" id="express">Pay $200 &amp; skip the form</button>
+        <div class="tiny">*plus applicable fees</div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:18px"><button class="btn grey" id="dnk">Don't not keep my membership</button></div>
+  </div>`;
+  const blocked = () => {
+    if (!$('#upsell').checked) return false;
+    mark('upsell');
+    toast('✨ Platinum upgrade applied! (You left the box ticked.) Untick it to continue leaving.');
+    $('#upsell').closest('.chk').animate([{background:'#fef3c7'},{background:'transparent'}], 1200);
+    return true;
+  };
+  $('#upsell').onchange = e => {
+    $('#upl').textContent = e.target.checked
+      ? 'Also upgrade me to the 3-year Platinum plan ($899.97, billed today)'
+      : 'I decline Platinum and accept that Mochi will sleep alone tonight.';
+    if (!e.target.checked) toast('Platinum declined. Mochi is staring at you.');
+  };
+  $('#keep').onclick = () => { mark('disguise'); toast('💚 Great choice! Your membership is safe with us.'); home(); };
+  $('#dnk').onclick = () => { mark('doubleneg'); toast("Don't not keep = keep. Logic! Membership kept 💚"); home(); };
+  $('#free').onclick = () => { if (blocked()) return; adBreak(0, () => section(0)); };
+  $('#express').onclick = () => { if (blocked()) return; mark('paytoleave'); checkout(); };
+}
+
+/* ============ 2. Bait-and-switch checkout ============ */
+function checkout(){
+  mark('baitswitch'); mark('drip'); mark('precheck');
+  app.innerHTML = `
+  <div class="card">
+    <h2>Express Cancellation Checkout</h2>
+    <p class="muted small">Almost free! Just a few small details.</p>
+    <div class="co">
+      <div>
+        <h3>Order summary</h3>
+        <div class="line"><span>Express Cancellation</span><span>$200.00</span></div>
+        <div class="line"><span>Express processing fee</span><span>$49.99</span></div>
+        <div class="line"><span>Convenience fee (for the convenience)</span><span>$24.99</span></div>
+        <div class="line"><span>Mochi emotional-support surcharge</span><span>$25.02</span></div>
+        <label class="line" style="cursor:pointer"><span><input type="checkbox" id="plat" checked> Platinum trial (auto-renews at $89.99/mo)</span><span id="platp">$0.00*</span></label>
+        <div class="line total"><span>Total due today</span><span id="tot">$300.00</span></div>
+        <div class="tiny">Prices shown on previous pages were for illustrative purposes. *Trial billed in 3 minutes.</div>
+      </div>
+      <div>
+        <h3>Payment method</h3>
+        <label class="pm"><input type="radio" name="pm" value="coins" checked> 🪙 Mochi Coins <span class="muted small">(balance: 0)</span></label>
+        <label class="pm"><input type="radio" name="pm" value="vibes"> ✨ Good vibes</label>
+        <label class="pm"><input type="radio" name="pm" value="exposure"> 📣 3 exposure points</label>
+        <label class="pm"><input type="radio" name="pm" value="ious"> 📝 A sincere IOU</label>
+        <div class="pm off">💳 Credit / debit card <span class="muted small">— unavailable in your region (your region: here)</span></div>
+        <button class="btn green big" id="pay" style="width:100%;margin-top:8px">Pay $300.00</button>
+        <p class="tiny">This is a fake demo. No real payment is taken or possible.</p>
+      </div>
+    </div>
+    <a class="small" id="back">← Back to free cancellation</a>
+  </div>`;
+  $('#plat').onchange = e => toast(e.target.checked ? 'Platinum trial re-added 💎' : 'Platinum trial removed. Mochi noticed.');
+  $('#back').onclick = landing;
+  $('#pay').onclick = () => {
+    $('#pay').disabled = true; $('#pay').textContent = 'Processing…';
+    setTimeout(() => {
+      mark('declined');
+      const ov = modal(`
+        <h2>❌ Payment declined</h2>
+        <p>Reason: <b>Express Cancellation requires an active Platinum membership.</b></p>
+        <p class="muted small">Upgrade to Platinum ($899.97, 3 years) to unlock Express Cancellation, or complete the free form.</p>
+        <div class="actions"><button class="btn" id="up">Upgrade to Platinum</button><button class="btn ghost" id="toform">Use the free form</button></div>`);
+      $('#up', ov).onclick = () => toast('Nice try. Upgrading is disabled in this demo 😉');
+      $('#toform', ov).onclick = () => { ov.remove(); adBreak(0, () => section(0)); };
+    }, 2200);
+  };
+}
+
+/* ============ 3. Unskippable ads ============ */
+const ADS = {
+  plat:{name:'ClingStream Platinum', bg:'linear-gradient(135deg,#4c1d95,#9333ea)', emoji:'💎', secs:15,
+    lines:['Tired of leaving?','Introducing PLATINUM','Now with 40% more cling','Can\'t cancel what you can\'t find™','Platinum. You\'re not going anywhere.']},
+  future:{name:'A Message From Future You', bg:'linear-gradient(135deg,#0f172a,#334155)', emoji:'🧓', secs:10,
+    lines:['Hi. It\'s you, from 2031.','I cancelled ClingStream.','I have not known peace since.','Please. Stay.']},
+  kibble:{name:"Mochi's Premium Kibble", bg:'linear-gradient(135deg,#b45309,#f59e0b)', emoji:'🐱', secs:18,
+    lines:['Mochi is hungry.','Mochi only eats when YOU subscribe.','Every cancellation = one empty bowl 🥣','Mochi Kibble™','Powered by your monthly payment.']},
+  insure:{name:'Unsubscribe Insurance', bg:'linear-gradient(135deg,#065f46,#10b981)', emoji:'🛡️', secs:20,
+    lines:['What if you cancel…','…and regret it?','Unsubscribe Insurance','Only $19.99/mo','Protects you from the pain of freedom','Terms apply. All of them.']},
+  elevator:{name:'Elevator Music: The Movie', bg:'linear-gradient(135deg,#7f1d1d,#ef4444)', emoji:'🛗', secs:12,
+    lines:['This winter…','One elevator.','One song.','Four hours.','Coming never to theaters.']},
+};
+const BREAKS = [['plat','future'], ['kibble'], ['insure','elevator'], []];
+
+function adBreak(i, done){
+  const list = BREAKS[i];
+  if (!list.length) return done();
+  mark('ads');
+  let k = 0;
+  const playNext = () => {
+    if (k >= list.length) return done();
+    playAd(ADS[list[k]], k+1, k+1, () => { k++; if (k < list.length) mark('adcount'); playNext(); });
+  };
+  playNext();
+}
+function playAd(ad, n, of, done){
+  const ov = document.createElement('div'); ov.className = 'ad-ov';
+  ov.innerHTML = `
+    <div class="ad">
+      <div class="ad-screen" style="background:${ad.bg}">
+        <div class="ad-tag">Sponsored · ${esc(ad.name)}</div>
+        <div class="ad-why">Why this ad? Because you tried to leave.</div>
+        <div><div class="ad-emoji">${ad.emoji}</div><div class="ad-line" id="al"></div></div>
+        <div class="ad-paused" id="ap">⏸ Ad paused. We noticed you looked away 👀<br>Click here to keep watching.</div>
+      </div>
+      <div class="ad-bar"><i id="ab"></i></div>
+      <div class="ad-foot"><span id="ac">Ad ${n} of ${of} · 0:00 / 0:${String(ad.secs).padStart(2,'0')}</span><button class="skip" id="sk">Skip in 5</button></div>
+    </div>`;
+  document.body.appendChild(ov);
+  const al = $('#al',ov), ab = $('#ab',ov), ac = $('#ac',ov), sk = $('#sk',ov), ap = $('#ap',ov);
+  let t = 0, skipAt = 5, fakeSkips = 0, lineIdx = -1, finished = false;
+  const per = ad.secs / ad.lines.length;
+  const finish = () => {
+    if (finished) return;
+    finished = true; clearInterval(iv); S.adsWatched++; S.adSecs += ad.secs;
+    sk.textContent = 'Continue to form ▸'; sk.classList.add('real'); ab.style.width = '100%';
+    ac.textContent = `Ad ${n} of ${of} · complete`; sk.focus();
+  };
+  S.demo = finish;
+  const iv = setInterval(() => {
+    if (finished) return;
+    const away = document.hidden || !document.hasFocus();
+    ap.style.display = away ? 'flex' : 'none';
+    if (away){ mark('attention'); return; }
+    t += 0.25;
+    const li = Math.min(ad.lines.length-1, Math.floor(t/per));
+    if (li !== lineIdx){ lineIdx = li; al.textContent = ad.lines[li]; al.style.animation = 'none'; void al.offsetWidth; al.style.animation = ''; }
+    ab.style.width = (t/ad.secs*100) + '%';
+    ac.textContent = `Ad ${n} of ${of} · 0:${String(Math.floor(t)).padStart(2,'0')} / 0:${String(ad.secs).padStart(2,'0')}`;
+    const left = Math.ceil(skipAt - t);
+    sk.textContent = left > 0 ? `Skip in ${left}` : 'Skip Ad ▸';
+    if (t >= ad.secs) finish();
+  }, 250);
+  ap.onclick = () => window.focus();
+  sk.onclick = () => {
+    if (finished){ ov.remove(); S.demo = null; done(); return; }
+    if (Math.ceil(skipAt - t) > 0) return;
+    mark('fakeskip'); fakeSkips++;
+    toast(fakeSkips === 1 ? '⏭ Skipping ads is a Platinum feature 💎 ($9.99/mo)' : '⏭ Still a Platinum feature. Nice try though.');
+    skipAt = Math.min(ad.secs + 1, t + 5);
+  };
+}
+
+/* ============ 4. The long form ============ */
+const minLen = (n) => v => v.trim().length >= n ? '' : `Please write at least ${n} characters. You wrote ${v.trim().length}. Mochi expected more.`;
+const SECTIONS = [
+  {title:'Part 1 — Your Relationship with ClingStream', intro:'Help us understand what we had, so we can understand what we are losing.', fields:[
+    {id:'love', type:'textarea', min:150, label:'Describe, in vivid detail, the exact moment you first fell in love with ClingStream+.', help:'Include the time of day, what you were watching, and how it made you feel.'},
+    {id:'show1', type:'text', min:40, label:'Name the show you will miss the most, and explain how it made you a better person.'},
+    {id:'show2', type:'text', min:40, label:'Name the show you will miss second-most, and explain why it is not your first.'},
+    {id:'show3', type:'text', min:40, label:'Name a show you never watched, and explain why you are abandoning it too.'},
+    {id:'doubt', type:'date', label:'On what date did you first begin to have doubts about us?', help:'Must be after you joined (Jan 1, 2019) and before today.',
+      check:v => v && v >= '2019-01-01' && v < TODAY ? '' : 'That date does not work. Mochi remembers it differently.'},
+    {id:'middle', type:'text', label:"Security question: What is Mochi's middle name?", help:'Hint: it is mentioned in our <a data-terms>Terms of Service</a>.',
+      check:v => v.trim().toLowerCase() === 'aurelius' ? '' : 'Incorrect. Have you read the Terms of Service? (Nobody has.)'},
+  ]},
+  {title:'Part 2 — Your Reasons for Leaving', intro:'Please be specific. Vague reasons will be considered reasons to stay.', fields:[
+    {id:'reason', type:'select', label:'What is your primary reason for leaving?', opts:['— select a reason —','It costs too much','I don\'t watch enough','I found another service','I\'m taking a break from screens','Mochi is too clingy','The autoplay scares me','Other (please explain at length)'],
+      check:v => v && !v.startsWith('—') ? '' : 'Please choose a reason. "No reason" is not a reason.'},
+    {id:'reasonx', type:'textarea', min:120, label:'Explain your reason above in more detail. Then explain why it is our fault and not yours.', help:'Minimum 120 characters. Bullet points are not allowed.'},
+    {id:'blame', type:'radio', label:'Who is responsible for this breakup?', opts:['Me','Also me','Mostly me, but a little bit Mochi'],
+      check:v => v ? '' : 'Please accept some responsibility.'},
+    {id:'sorry', type:'textarea', min:80, label:'Write a short, heartfelt apology to Mochi.', help:'Minimum 80 characters. Must include the word "sorry".',
+      check:v => minLen(80)(v) || (/sorry/i.test(v) ? '' : 'Your apology does not contain the word "sorry". Mochi is not convinced.')},
+    {id:'back', type:'number', label:'On a scale of 1 to 10, how likely are you to come back?', help:'1 = never, 10 = tomorrow',
+      check:v => v === '' ? 'This field is required.' : (+v < 8 ? 'Values below 8 are reserved for Platinum members. Please choose 8, 9 or 10.' : (+v > 10 ? 'We appreciate the enthusiasm, but the maximum is 10.' : ''))},
+  ]},
+  {title:'Part 3 — Your Life After ClingStream', intro:'We just want to make sure you have thought this through.', fields:[
+    {id:'budget', type:'textarea', min:120, label:'What will you do with the extra $14.99 a month? Provide an itemized budget.', help:'Minimum 120 characters. Must include at least one dollar amount (e.g. $5).',
+      check:v => minLen(120)(v) || (/\$\s?\d/.test(v) ? '' : 'An itemized budget needs at least one dollar amount, like $5.')},
+    {id:'evenings', type:'textarea', min:100, label:'Describe, hour by hour, how you will spend your Friday evenings without us.', help:'Minimum 100 characters.'},
+    {id:'ideal', type:'textarea', min:80, label:'Describe your ideal streaming service. Then explain why it is ClingStream.', help:'Minimum 80 characters. Must mention "ClingStream".',
+      check:v => minLen(80)(v) || (/clingstream/i.test(v) ? '' : 'Your ideal service does not mention ClingStream. Please try again.')},
+    {id:'friends', type:'textarea', min:100, label:'How will you explain this decision to your friends and family?', help:'Minimum 100 characters. Imagine they are disappointed.'},
+  ]},
+  {title:'Part 4 — Legal Acknowledgments', intro:'Final part. We promise. (We are a streaming company, not a legal one.)', fields:[
+    {id:'ack', type:'checks', label:'Please tick all required acknowledgments.', opts:[
+      ['I understand that my playlists will be shredded.', true],
+      ['I understand that Mochi will be notified.', true],
+      ['I understand that the 47 unused benefits will remain unused, forever.', true],
+      ['I would like to keep my subscription and stop this form.', false],
+      ['I have not been pressured into leaving by a competitor.', true],
+      ['I understand that leaving is my choice and that I will have to live with it.', true],
+    ]},
+    {id:'oath', type:'text', label:'Type the following oath exactly: I am leaving of my own free will and Mochi did nothing wrong', help:'Pasting has been disabled for your emotional safety. SmartType™ autocorrect is on to help you.',
+      check:v => v.trim().replace(/\.$/,'').toLowerCase() === 'i am leaving of my own free will and mochi did nothing wrong' ? '' : 'The oath does not match. Type it word for word. (If SmartType™ "fixes" a word, press Backspace once to undo it.)'},
+    {id:'sig', type:'signature', label:'Sign below using your mouse or finger.', help:'Your signature must be at least as long as your commitment to us.'},
+  ]},
+];
+
+function section(i){
+  S.section = i; S.fails = 0;
+  const sec = SECTIONS[i], total = Math.min(SECTIONS.length, i+3);
+  if (i === 1) mark('goalpost');
+  mark('essays');
+  const remain = 47 + i*9;
+  app.innerHTML = `
+    <div class="sticky">
+      <div class="prog"><span><b>Form CS-404</b> · Part ${i+1} of ${total}</span><span>Est. time remaining: ${remain} min</span></div>
+      <div class="bar"><i style="width:${Math.round((i+.3)/total*100)}%"></i></div>
+    </div>
+    <div class="card">
+      <h2>${esc(sec.title)}</h2>
+      <p class="muted small">${esc(sec.intro)} All fields are required <span class="req">*</span></p>
+      <div class="formerr" id="fe"></div>
+      <div id="fields">${sec.fields.map((f,j)=>fieldHTML(f, `${i+1}.${j+1}`)).join('')}</div>
+      <div class="actions">
+        <span class="tiny">Progress cannot be saved. Leaving this page will not save your progress.</span>
+        <button class="btn" id="sub">${i === SECTIONS.length-1 ? 'Submit cancellation request' : 'Save &amp; continue →'}</button>
+      </div>
+    </div>`;
+  window.scrollTo(0,0);
+  sec.fields.forEach(wireField);
+  $$('[data-terms]').forEach(a => a.onclick = terms);
+  $('#sub').onclick = () => submitSection(i);
+  S.demo = () => autofill(i);
+}
+
+function fieldHTML(f, num){
+  const val = esc(S.values[f.id] ?? '');
+  let input = '';
+  if (f.type === 'textarea') input = `<textarea id="f_${f.id}">${val}</textarea>`;
+  if (f.type === 'text') input = `<input type="text" id="f_${f.id}" value="${val}" autocomplete="off"${f.id==='oath' ? ' autocorrect="off" autocapitalize="off" spellcheck="false"' : ''}>`
+    + (f.id === 'oath' ? '<div class="acflash" id="acf">✨ SmartType™ autocorrect is ON.</div>' : '');
+  if (f.type === 'date') input = `<input type="date" id="f_${f.id}" value="${val}">`;
+  if (f.type === 'number') input = `<input type="number" id="f_${f.id}" value="${val}" min="1" max="10" step="1">`;
+  if (f.type === 'select') input = `<select id="f_${f.id}">${f.opts.map(o=>`<option${o===S.values[f.id]?' selected':''}>${esc(o)}</option>`).join('')}</select>`;
+  if (f.type === 'radio') input = `<div class="opts">${f.opts.map(o=>`<label><input type="radio" name="f_${f.id}" value="${esc(o)}"> ${esc(o)}</label>`).join('')}</div>`;
+  if (f.type === 'checks') input = `<div class="opts">${f.opts.map((o,k)=>`<label><input type="checkbox" data-k="${k}"> ${esc(o[0])}</label>`).join('')}</div>`;
+  if (f.type === 'signature') input = `<canvas class="sig" id="f_${f.id}"></canvas><div class="actions" style="margin-top:6px"><span class="tiny" id="ink">Ink used: 0%</span><a class="small" id="clr">Clear signature</a></div>`;
+  return `<div class="field" id="w_${f.id}">
+      <div class="q"><span class="num">${num}</span>${esc(f.label)} <span class="req">*</span></div>
+      ${f.help ? `<div class="help">${f.help}</div>` : ''}
+      ${input}
+      <div class="meta"><span class="err"></span>${f.min ? `<span class="count" id="c_${f.id}"></span>` : ''}</div>
+    </div>`;
+}
+
+function getVal(f){
+  const w = $('#w_'+f.id);
+  if (f.type === 'radio') return ($('input:checked', w) || {}).value || '';
+  if (f.type === 'checks') return $$('input', w).map(b=>b.checked);
+  if (f.type === 'signature') return S.ink || 0;
+  return $('#f_'+f.id).value;
+}
+function validate(f){
+  const v = getVal(f);
+  if (f.type === 'checks'){
+    if (v[3]) return 'You ticked "I would like to keep my subscription". Subscription kept 💚 (Untick it to continue.)';
+    return f.opts.every((o,k)=>!o[1] || v[k]) ? '' : 'Please tick every required acknowledgment.';
+  }
+  if (f.type === 'signature') return v >= 100 ? '' : `Your signature is too short (${Math.min(99,v)}% of the minimum). Sign with more commitment.`;
+  if (f.check) return f.check(v);
+  if (f.min) return minLen(f.min)(v);
+  return v ? '' : 'This field is required.';
+}
+
+function wireField(f){
+  const el = $('#f_'+f.id);
+  if (f.min && el){
+    const c = $('#c_'+f.id);
+    const upd = () => { const n = el.value.trim().length; c.textContent = `${n} / ${f.min} characters minimum`; c.classList.toggle('ok', n >= f.min); S.values[f.id] = el.value; };
+    el.addEventListener('input', upd); upd();
+  } else if (el && el.tagName !== 'CANVAS') {
+    el.addEventListener('input', () => S.values[f.id] = el.value);
+  }
+  if (f.id === 'oath'){
+    el.onpaste = e => { e.preventDefault(); mark('nopaste'); toast('📋 Pasting is disabled. Please type it with feeling.'); };
+    wireAutocorrect(el);
+  }
+  if (f.id === 'middle') el.addEventListener('focus', () => mark('trivia'), {once:true});
+  if (f.id === 'back') el.addEventListener('change', () => { if (+el.value < 8) { mark('rigged'); } });
+  if (f.type === 'checks') $$('input', $('#w_'+f.id)).forEach(b => b.addEventListener('change', () => { if (b.dataset.k === '3' && b.checked) mark('trap'); }));
+  if (f.type === 'signature') wireSig(el);
+}
+
+/* SmartType™: "fixes" key words; pressing Backspace right after a fix undoes it (like a phone) */
+function wireAutocorrect(inp){
+  const MAP = {leaving:'staying', free:'paid', wrong:'right'};
+  const af = $('#acf');
+  let last = null, prev = inp.value;
+  const flash = h => { af.innerHTML = h; af.classList.remove('pop'); void af.offsetWidth; af.classList.add('pop'); };
+  const correct = withSpace => {
+    const v = inp.value, m = withSpace ? v.match(/(\S+)(\s)$/) : v.match(/(\S+)$/);
+    if (!m) return false;
+    const w = m[1], lw = w.toLowerCase().replace(/[^a-z]/g,'');
+    if (!MAP[lw] || S.acAccepted.has(lw)) return false;
+    const after = v.slice(0, m.index) + MAP[lw] + (withSpace ? m[2] : '');
+    last = {before:v, after, word:lw};
+    inp.value = prev = S.values.oath = after;
+    flash(`✨ Autocorrected “${esc(w)}” → “${MAP[lw]}”`);
+    mark('autocorrect');
+    return true;
+  };
+  const undo = () => {
+    inp.value = prev = S.values.oath = last.before; S.acAccepted.add(last.word);
+    flash(`↩️ Fine. Keeping “${last.word}”. Mochi noticed.`); last = null;
+  };
+  S.acFinal = () => correct(false);
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Backspace' && last && inp.value === last.after){ e.preventDefault(); undo(); }
+  });
+  inp.addEventListener('input', e => {
+    if (e.inputType === 'deleteContentBackward' && last && prev === last.after){ undo(); return; }
+    if (last && inp.value !== last.after) last = null;
+    if (/\s$/.test(inp.value)) correct(true);
+    prev = S.values.oath = inp.value;
+  });
+}
+
+function wireSig(cv){
+  S.ink = 0;
+  const ctx = cv.getContext('2d');
+  const fit = () => { const r = cv.getBoundingClientRect(); cv.width = r.width * devicePixelRatio; cv.height = r.height * devicePixelRatio; ctx.scale(devicePixelRatio, devicePixelRatio); ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.strokeStyle = '#1e1b4b'; };
+  fit();
+  let down = false, last = null;
+  const pt = e => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+  cv.onpointerdown = e => { down = true; last = pt(e); cv.setPointerCapture(e.pointerId); };
+  cv.onpointermove = e => {
+    if (!down) return;
+    const p = pt(e); ctx.beginPath(); ctx.moveTo(...last); ctx.lineTo(...p); ctx.stroke();
+    S.ink += Math.hypot(p[0]-last[0], p[1]-last[1]) / 25; last = p;
+    $('#ink').textContent = `Ink used: ${Math.min(100, Math.round(S.ink))}%` + (S.ink >= 100 ? ' ✓ That is commitment.' : '');
+  };
+  cv.onpointerup = cv.onpointercancel = () => down = false;
+  $('#clr').onclick = () => { ctx.clearRect(0,0,cv.width,cv.height); S.ink = 0; $('#ink').textContent = 'Ink used: 0%'; };
+}
+
+function submitSection(i){
+  const sec = SECTIONS[i];
+  if (i === SECTIONS.length-1 && S.acFinal) S.acFinal();
+  let bad = 0;
+  sec.fields.forEach(f => {
+    const msg = validate(f), w = $('#w_'+f.id);
+    w.classList.toggle('bad', !!msg);
+    $('.err', w).textContent = S.fails >= 1 ? msg : (msg ? 'Something is wrong here.' : '');
+    if (msg) bad++;
+  });
+  const fe = $('#fe');
+  if (bad){
+    mark('vague'); S.fails++;
+    fe.style.display = 'block';
+    fe.textContent = S.fails === 1 ? '⚠ Something went wrong. Please review your answers.' : `⚠ ${bad} field${bad>1?'s are':' is'} still invalid. We've added details below each one.`;
+    window.scrollTo({top:0, behavior:'smooth'});
+    return;
+  }
+  if (i < SECTIONS.length-1){
+    toast(`✅ Part ${i+1} saved. Mochi read it and cried.`);
+    adBreak(i+1, () => section(i+1));
+  } else processing();
+}
+
+function terms(){
+  const p = [
+    '1. By existing near a ClingStream+ device, you agree to these Terms.',
+    '2. ClingStream+ ("we", "us", "the family") may update these Terms at any time, including retroactively, including right now.',
+    '3. Your subscription renews automatically, emotionally and spiritually.',
+    '4. Cancellation requests must be submitted in full, in good faith, and in a calm tone of voice.',
+    '5. All cookies are mandatory. Some of them are real cookies. You will not be told which.',
+    '6. ClingStream+ is not responsible for feelings, including but not limited to guilt, regret, nostalgia and mild FOMO.',
+    '7. Our mascot, Mochi Aurelius Fluffington, is a fictional cat and cannot legally be held responsible for anything, though Mochi does take it personally.',
+    '8. Benefits not used within the billing period are carried over to the next billing period, where they will also not be used.',
+    '9. Autoplay may continue after you fall asleep. This is a feature.',
+    '10. If any part of these Terms is found to be unenforceable, the rest of it will just be more enforceable to make up for it.',
+    '11. These Terms are governed by the laws of the Moon.',
+  ];
+  const ov = modal(`<h2>Terms of Service</h2><div class="muted small">Last updated: just now</div><div class="scroll">${p.map(x=>`<p>${x}</p>`).join('')}</div><div class="actions"><span class="tiny">Closing this window means you agree.</span><button class="btn" id="agree">I agree</button></div>`);
+  $('#agree', ov).onclick = () => ov.remove();
+}
+
+function autofill(i){
+  const filler = 'Honestly, it was a rainy Tuesday night and ClingStream felt like home. I am sorry, Mochi. I will spend $5 on tea and $9.99 on books. ';
+  SECTIONS[i].fields.forEach(f => {
+    const w = $('#w_'+f.id), el = $('#f_'+f.id);
+    if (f.type === 'textarea' || (f.type === 'text' && f.min)) el.value = filler.repeat(2).slice(0, Math.max(f.min||0, 60) + 40);
+    if (f.id === 'middle') el.value = 'Aurelius';
+    if (f.id === 'oath'){ ['leaving','free','wrong'].forEach(w => S.acAccepted.add(w)); el.value = 'I am leaving of my own free will and Mochi did nothing wrong'; }
+    if (f.type === 'date') el.value = '2023-05-04';
+    if (f.type === 'number') el.value = '9';
+    if (f.type === 'select') el.selectedIndex = 1;
+    if (f.type === 'radio') $('input', w).checked = true;
+    if (f.type === 'checks') $$('input', w).forEach((b,k)=> b.checked = f.opts[k][1]);
+    if (f.type === 'signature'){ const c = el.getContext('2d'); c.beginPath(); for (let x=10;x<260;x+=4) c.lineTo(x, 75 + Math.sin(x/9)*30); c.stroke(); S.ink = 100; $('#ink').textContent = 'Ink used: 100% ✓ That is commitment.'; }
+    if (el && el.dispatchEvent) el.dispatchEvent(new Event('input'));
+  });
+  toast('🧪 Demo autofill applied');
+}
+
+/* ============ 5. Processing + confirmation ============ */
+function processing(){
+  S.demo = null;
+  const msgs = ['Reading your essays…','Showing them to Mochi…','Mochi is processing…','Mochi needs a minute…','Finalizing paperwork…'];
+  app.innerHTML = `<div class="card" style="text-align:center"><div class="spinner"></div><h2 id="pm">${msgs[0]}</h2><p class="muted small">Please do not close, refresh, or emotionally move on from this page.</p></div>`;
+  let k = 0;
+  const iv = setInterval(() => {
+    k++;
+    if (k < msgs.length){ $('#pm').textContent = msgs[k]; return; }
+    clearInterval(iv); received();
+  }, 900);
+}
+function received(){
+  mark('delay');
+  app.innerHTML = `
+    <div class="card" style="text-align:center">
+      <div style="font-size:56px">📬</div>
+      <h2>Your cancellation request has been received</h2>
+      <p>Request #CS-404-${Math.floor(Math.random()*90000+10000)} is now in our queue.</p>
+      <p><b>Estimated processing time: 6–8 business weeks.</b><br><span class="muted small">Your membership will continue (and be billed) until then.</span></p>
+      <button class="btn" id="home">Back to watching 🍿</button>
+      <p style="margin-top:28px"><a class="tiny" id="now">process my cancellation now</a></p>
+    </div>`;
+  $('#home').onclick = () => toast('Enjoy! 💚 (Your request is still in the queue. Try the tiny link.)');
+  $('#now').onclick = done;
+}
+function done(){
+  const secs = Math.round((Date.now() - S.start)/1000);
+  app.innerHTML = `
+    <div class="card" style="text-align:center">
+      <div class="stamp">CANCELLED</div>
+      <h2>Your ClingStream+ membership has been cancelled.</h2>
+      <p class="muted">Confirmation #CS-404-FREEDOM · Effective immediately · No further charges. Mochi will be okay (Mochi is fictional).</p>
+      <div class="stats">
+        <div><b>${Math.floor(secs/60)}:${String(secs%60).padStart(2,'0')}</b><span class="small muted">time to escape</span></div>
+        <div><b>${S.adsWatched}</b><span class="small muted">ads endured (${S.adSecs}s)</span></div>
+        <div><b>${S.found.length}/${Object.keys(DP).length}</b><span class="small muted">dark patterns survived</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Dark patterns you survived</h3>
+      <ol class="dp">${S.found.map(k=>`<li><b>${DP[k][0]}</b>: ${DP[k][1]}</li>`).join('')}</ol>
+      <div class="actions"><span class="tiny">ClingStream+ is fictional. No real accounts, payments or personal data were used.</span><button class="btn ghost" id="again">Try again</button></div>
+    </div>`;
+  window.scrollTo(0,0);
+  $('#again').onclick = () => location.reload();
+}
+
+/* ============ Session scare ============ */
+['input','pointerdown','keydown','scroll'].forEach(ev => addEventListener(ev, () => S.idle = 0, {passive:true}));
+setInterval(() => {
+  if (!$('#fields') || $('.ad-ov') || $('.modal-ov')) return;
+  if (++S.idle < 45) return;
+  S.idle = 0; mark('session');
+  let n = 10;
+  const ov = modal(`<h2>⏳ Are you still there?</h2><p>For your security, your session will expire in <b id="sn">10</b> seconds and all answers will be lost.</p><button class="btn" id="here">I'm still here!</button>`);
+  const iv = setInterval(() => {
+    n--; const sn = $('#sn', ov); if (sn) sn.textContent = Math.max(0, n);
+    if (n <= 0){ clearInterval(iv); ov.querySelector('.modal').innerHTML = `<h2>Session expired</h2><p>…just kidding. We saved everything. We just wanted to see you panic. 💚</p><button class="btn" id="here">Phew</button>`; $('#here', ov).onclick = () => ov.remove(); }
+  }, 1000);
+  $('#here', ov).onclick = () => { clearInterval(iv); ov.remove(); };
+}, 1000);
+
+/* Hidden presenter shortcut: "]" finishes the current ad or fills the current form part */
+addEventListener('keydown', e => {
+  if (e.key !== ']' || /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
+  if (S.demo) S.demo();
+});
+
+renderDex();
+home();
+</script>
+</body>
+</html>
